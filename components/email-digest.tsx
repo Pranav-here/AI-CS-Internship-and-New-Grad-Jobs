@@ -42,13 +42,12 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
   const [sending, setSending] = useState(false)
   const { toast } = useToast()
 
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
-  }
+  // stricter: must end with dot‑something (at least 2 chars)
+  const validateEmail = (e: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.trim())
 
-  const handleSendDigest = async () => {
-    if (!email || !validateEmail(email)) {
+  async function handleSendDigest() {
+    if (!validateEmail(email)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address.",
@@ -60,7 +59,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
     if (jobs.length === 0) {
       toast({
         title: "No Jobs to Send",
-        description: "Please search for jobs first before sending a digest.",
+        description: "Search for jobs before sending a digest.",
         variant: "destructive",
       })
       return
@@ -68,28 +67,28 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
 
     setSending(true)
     try {
-      const response = await fetch("/api/send-email-digest", {
+      const res = await fetch("/api/send-email-digest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          jobs: jobs.slice(0, 10), // Send top 10 jobs
+          jobs: jobs.slice(0, 10),
           preferences: searchFilters,
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to send email")
-      }
+      if (!res.ok) throw new Error()
 
       toast({
-        title: "Email Sent!",
-        description: `Job digest sent to ${email} with ${Math.min(jobs.length, 10)} opportunities.`,
+        title: "Email Sent",
+        description: `Sent ${Math.min(jobs.length, 10)} jobs to ${email}.`,
       })
-    } catch (error) {
+      setEnableDigest(false)
+      setEmail("")
+    } catch {
       toast({
         title: "Email Failed",
-        description: "Failed to send email digest. Please try again.",
+        description: "We couldn’t send the digest. Try again later.",
         variant: "destructive",
       })
     } finally {
@@ -98,22 +97,40 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
   }
 
   return (
-    <Card className="mb-8 border-0 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+    <Card
+      className="
+        group mb-8 border-0 rounded-xl overflow-hidden
+        bg-gradient-to-r from-purple-50 to-pink-50
+        dark:from-purple-900/20 dark:to-pink-900/20
+        hover:shadow-lg transition-shadow
+      "
+    >
+      {/* subtle hover glow */}
+      <span
+        className="
+          absolute inset-0 pointer-events-none
+          opacity-0 group-hover:opacity-100
+          bg-gradient-to-r from-purple-400/10 to-pink-400/10
+          transition-opacity duration-500
+        "
+      />
+
       <CardHeader>
         <CardTitle className="flex items-center">
           <Mail className="w-5 h-5 mr-2" />
           Email Digest
         </CardTitle>
-        <CardDescription>Get search results delivered to your inbox</CardDescription>
+        <CardDescription>Get search results in your inbox</CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-2">
           <Checkbox
             id="enable-digest"
             checked={enableDigest}
-            onCheckedChange={(checked) => setEnableDigest(checked as boolean)}
+            onCheckedChange={(c) => setEnableDigest(c as boolean)}
           />
-          <Label htmlFor="enable-digest">Send search results to email</Label>
+          <Label htmlFor="enable-digest">Send search results by email</Label>
         </div>
 
         {enableDigest && (
@@ -123,7 +140,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
               <Input
                 id="digest-email"
                 type="email"
-                placeholder="your@email.com"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
@@ -133,12 +150,16 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
             <Button
               onClick={handleSendDigest}
               disabled={sending || !email}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              className="
+                w-full bg-gradient-to-r from-purple-600 to-pink-600
+                hover:from-purple-700 hover:to-pink-700
+                focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
+              "
             >
               {sending ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Sending...
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Sending…
                 </>
               ) : (
                 <>
@@ -149,7 +170,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
             </Button>
 
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              📧 We'll send you the top {Math.min(jobs.length || 10, 10)} job opportunities from your search results.
+              We’ll email the top {Math.min(jobs.length || 10, 10)} matching roles.
             </p>
           </div>
         )}
