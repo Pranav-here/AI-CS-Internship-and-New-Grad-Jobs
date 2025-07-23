@@ -1,4 +1,6 @@
-# AI/CS Entry-Level & Internship Finder
+# AI/CS Entry‑Level & Internship Finder
+
+[Live Demo → techcareers.vercel.app](https://techcareers.vercel.app/)
 
 A modern, production-ready web application that helps students and new graduates discover internships and entry-level positions in AI, ML, Data Science, and Software Engineering.
 
