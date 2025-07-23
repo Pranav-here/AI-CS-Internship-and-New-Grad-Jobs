@@ -321,8 +321,8 @@ export default function JobFinderApp() {
               <Image
                 src="/favi.png"           // path is relative to /public
                 alt="TechCareers logo"
-                width={40}                // equals Tailwind w-10
-                height={40}               // equals h-10
+                width={40}                
+                height={40}               
                 className="rounded-xl shadow-lg object-cover"
                 priority                  // avoids LCP penalty on the main logo
               />
