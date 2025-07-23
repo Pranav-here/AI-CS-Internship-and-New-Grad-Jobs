@@ -10,7 +10,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "TechCareers | Internships & Entry‑Level Roles",
   description:
-    "Curated internships and junior positions in AI, ML, Data Science, and Software Engineering for the 2025–2026 recruiting seasons."
+    "Curated internships and junior positions in AI, ML, Data Science, and Software Engineering for the 2025–2026 recruiting seasons.",
+  icons: {
+    icon: "/favicon.png", // ← path relative to /public
+  },
 }
 
 export default function RootLayout({
