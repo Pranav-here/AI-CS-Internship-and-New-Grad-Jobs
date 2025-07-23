@@ -29,9 +29,10 @@ interface JobTableProps {
 export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
   const [selectedJobs, setSelectedJobs] = useState<number[]>([])
 
-  const isJobSaved = (job: Job) => {
-    return savedJobs.some((saved) => saved["Job Title"] === job["Job Title"] && saved["Company"] === job["Company"])
-  }
+  const isJobSaved = (job: Job) =>
+    savedJobs.some(
+      (s) => s["Job Title"] === job["Job Title"] && s.Company === job.Company,
+    )
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -78,33 +79,36 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
     <div className="space-y-4">
       {/* Batch Actions */}
       {selectedJobs.length > 0 && (
-        <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200/60 dark:border-blue-800/40 shadow-sm">
           <span className="font-medium">
-            {selectedJobs.length} job{selectedJobs.length !== 1 ? "s" : ""} selected
+            {selectedJobs.length} job{selectedJobs.length !== 1 && "s"} selected
           </span>
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={handleBatchApply}>
               <ExternalLink className="w-4 h-4 mr-2" />
-              Open All Links
+              Open&nbsp;Links
             </Button>
+
             <Button size="sm" variant="outline" onClick={handleBatchSave}>
               <Bookmark className="w-4 h-4 mr-2" />
-              Save All
+              Save&nbsp;All
             </Button>
+
             <Button size="sm" variant="outline" onClick={handleExportSelected}>
               <Download className="w-4 h-4 mr-2" />
-              Export CSV
+              Export&nbsp;CSV
             </Button>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-lg border bg-white dark:bg-gray-800 overflow-hidden">
+      <div className="rounded-xl border bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50 dark:bg-gray-700/40">
             <TableRow>
-              <TableHead className="w-12">
+              <TableHead className="w-12 text-center">
                 <Checkbox
                   checked={selectedJobs.length === jobs.length && jobs.length > 0}
                   onCheckedChange={handleSelectAll}
@@ -113,70 +117,99 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
               <TableHead>Job Title</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Location</TableHead>
-              <TableHead>Remote</TableHead>
+              <TableHead className="text-center">Remote</TableHead>
               <TableHead>Tags</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {jobs.map((job, index) => {
-              const isRemote = job["Remote Job"] === "🏠 Remote" || job.Location?.toLowerCase().includes("remote")
+              const isRemote =
+                job["Remote Job"] === "🏠 Remote" ||
+                job.Location?.toLowerCase().includes("remote")
+
               const tags = job.Tags
-                ? job.Tags.split(",")
-                    .map((tag) => tag.trim())
-                    .slice(0, 2)
+                ? job.Tags.split(",").map((t) => t.trim()).slice(0, 2)
                 : []
 
               return (
-                <TableRow key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <TableCell>
+                <TableRow
+                  key={index}
+                  className="
+                    hover:bg-gray-50 dark:hover:bg-gray-700/50
+                    transition-colors
+                  "
+                >
+                  {/* Select */}
+                  <TableCell className="text-center">
                     <Checkbox
                       checked={selectedJobs.includes(index)}
-                      onCheckedChange={(checked) => handleSelectJob(index, checked as boolean)}
+                      onCheckedChange={(c) =>
+                        handleSelectJob(index, c as boolean)
+                      }
                     />
                   </TableCell>
+
+                  {/* Job title */}
                   <TableCell className="font-medium max-w-xs">
-                    <div className="truncate" title={job["Job Title"]}>
+                    <span className="truncate block" title={job["Job Title"]}>
                       {job["Job Title"]}
-                    </div>
+                    </span>
                   </TableCell>
+
+                  {/* Company */}
                   <TableCell className="max-w-xs">
-                    <div className="truncate" title={job.Company}>
+                    <span className="truncate block" title={job.Company}>
                       {job.Company}
-                    </div>
+                    </span>
                   </TableCell>
+
+                  {/* Location */}
                   <TableCell className="max-w-xs">
-                    <div className="truncate" title={job.Location}>
+                    <span className="truncate block" title={job.Location}>
                       {job.Location}
-                    </div>
+                    </span>
                   </TableCell>
-                  <TableCell>
+
+                  {/* Remote badge */}
+                  <TableCell className="text-center">
                     {isRemote && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                      >
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                         ✓
                       </Badge>
                     )}
                   </TableCell>
+
+                  {/* Tags */}
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {tags.map((tag, tagIndex) => (
-                        <Badge key={tagIndex} variant="outline" className="text-xs">
+                      {tags.map((tag, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
                           {tag}
                         </Badge>
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
+
+                  {/* Actions */}
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-2">
                       <Button size="sm" asChild>
-                        <a href={job["Apply Link"]} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={job["Apply Link"]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Apply
                         </a>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => onSave(job)} disabled={isJobSaved(job)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onSave(job)}
+                        disabled={isJobSaved(job)}
+                      >
                         {isJobSaved(job) ? "Saved" : "Save"}
                       </Button>
                     </div>
