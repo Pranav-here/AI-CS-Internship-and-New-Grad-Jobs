@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/theme-toggle"
+import Image from "next/image"
 
 interface Job {
   "Job Title": string
@@ -317,9 +318,14 @@ export default function JobFinderApp() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
+              <Image
+                src="/favi.png"           // path is relative to /public
+                alt="TechCareers logo"
+                width={40}                // equals Tailwind w-10
+                height={40}               // equals h-10
+                className="rounded-xl shadow-lg object-cover"
+                priority                  // avoids LCP penalty on the main logo
+              />
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
                   TechCareers
