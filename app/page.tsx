@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   Search,
   Sparkles,
@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Star,
 } from "lucide-react"
+import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,6 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
+import Link from "next/link"
 
 interface Job {
   "Job Title": string
@@ -43,7 +45,7 @@ interface Job {
   "Posting Date": string
   QueryFlag: string
   Tags: string
-  "Remote Job": string
+  "Remote Job": "remote" | "onsite" | "hybrid"
 }
 
 interface SearchFilters {
@@ -94,21 +96,21 @@ const quickSearchPresets = [
   { label: "Data Engineer Entry", keyword: "data engineer", type: "Entry-Level / New-Grad Full-Time" },
 
   // Remote Opportunities
-  { label: "🏠 Remote SWE Intern", keyword: "software engineer", type: "Spring 2026 Internship", remote: true },
-  { label: "🏠 Remote Data Science", keyword: "data science", type: "Entry-Level / New-Grad Full-Time", remote: true },
+  { label: " Remote SWE Intern", keyword: "software engineer", type: "Spring 2026 Internship", remote: true },
+  { label: " Remote Data Science", keyword: "data science", type: "Entry-Level / New-Grad Full-Time", remote: true },
   {
-    label: "🏠 Remote ML Engineer",
+    label: " Remote ML Engineer",
     keyword: "machine learning",
     type: "Entry-Level / New-Grad Full-Time",
     remote: true,
   },
   {
-    label: "🏠 Remote Python Dev",
+    label: " Remote Python Dev",
     keyword: "python developer",
     type: "Entry-Level / New-Grad Full-Time",
     remote: true,
   },
-  { label: "🏠 Remote DevOps", keyword: "devops engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
+  { label: " Remote DevOps", keyword: "devops engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
   {
     label: "ML Research Assistant (Remote)",
     keyword: "machine learning research assistant",
@@ -118,9 +120,9 @@ const quickSearchPresets = [
 ]
 
 export default function JobFinderApp() {
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [searchKey, setSearchKey] = useState<string | null>(null)
+  const [sessionToken, setSessionToken] = useState<string>("")
   const [savedJobs, setSavedJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(false)
   const [searchPerformed, setSearchPerformed] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
@@ -140,12 +142,48 @@ export default function JobFinderApp() {
   })
 
   const { toast } = useToast()
+  const lastDigestKey = useRef<string | null>(null)
+  const normalizeRemoteStatus = (status: string) => {
+    const normalized = status?.toLowerCase().trim()
+    if (normalized.startsWith("remote")) return "remote"
+    if (normalized.includes("hybrid")) return "hybrid"
+    return "onsite"
+  }
+  const fetcher = async (key: string) => {
+    const payload = JSON.parse(key)
+    const response = await fetch("/api/search-jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      throw new Error(data?.error || "Search failed")
+    }
+    return response.json()
+  }
+
+  const {
+    data: searchData,
+    error: searchError,
+    isValidating: loading,
+  } = useSWR(searchKey, fetcher, { revalidateOnFocus: false, dedupingInterval: 5 * 60 * 1000, keepPreviousData: true })
+  const jobs = searchData?.jobs ?? []
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const existing = sessionStorage.getItem("session-token")
+    const token = existing || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`)
+    sessionStorage.setItem("session-token", token)
+    setSessionToken(token)
+  }, [])
 
   // Load saved jobs from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("savedJobs")
     if (saved) {
-      setSavedJobs(JSON.parse(saved))
+      const parsed: Job[] = JSON.parse(saved)
+      setSavedJobs(parsed.map((job) => ({ ...job, "Remote Job": normalizeRemoteStatus(job["Remote Job"]) })))
     }
   }, [])
 
@@ -153,6 +191,15 @@ export default function JobFinderApp() {
   useEffect(() => {
     localStorage.setItem("savedJobs", JSON.stringify(savedJobs))
   }, [savedJobs])
+
+  useEffect(() => {
+    if (!searchError) return
+    toast({
+      title: "Search Error",
+      description: searchError.message || "Failed to search jobs. Please try again.",
+      variant: "destructive",
+    })
+  }, [searchError, toast])
 
   const handleQuickSearch = (keyword: string, jobType: string, isRemote = false) => {
     const newFilters = {
@@ -166,7 +213,7 @@ export default function JobFinderApp() {
     handleSearch(newFilters)
   }
 
-  const handleSearch = async (searchFilters = filters) => {
+  const handleSearch = (searchFilters = filters) => {
     if (!searchFilters.keyword.trim()) {
       toast({
         title: "Search Required",
@@ -185,74 +232,70 @@ export default function JobFinderApp() {
       return
     }
 
-    setLoading(true)
-    try {
-      const response = await fetch("/api/search-jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(searchFilters),
-      })
-
-      if (!response.ok) {
-        throw new Error("Search failed")
-      }
-
-      const data = await response.json()
-      setJobs(data.jobs || [])
-      setSearchTimestamp(new Date())
-      setSearchPerformed(true)
-
-      toast({
-        title: "Search Complete",
-        description: `Found ${data.jobs?.length || 0} jobs matching your criteria.`,
-      })
-
-      // Send email digest if enabled
-      if (emailDigest.enabled && emailDigest.email && data.jobs?.length > 0) {
-        handleSendEmailDigest(data.jobs)
-      }
-    } catch (error) {
-      toast({
-        title: "Search Error",
-        description: "Failed to search jobs. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+    const normalizedFilters = {
+      ...searchFilters,
+      keyword: searchFilters.keyword.trim(),
+      jobTypes: [...searchFilters.jobTypes],
+      maxResults: Math.min(searchFilters.maxResults, 100),
     }
+
+    setFilters(normalizedFilters)
+    setSearchKey(JSON.stringify(normalizedFilters))
+    setSearchPerformed(true)
   }
 
-  const handleSendEmailDigest = async (jobsToSend = jobs) => {
-    if (!emailDigest.email || jobsToSend.length === 0) return
+  const handleSendEmailDigest = useCallback(
+    async (jobsToSend = jobs) => {
+      if (!emailDigest.email || jobsToSend.length === 0 || !sessionToken) return
 
-    setEmailDigest((prev) => ({ ...prev, sending: true }))
-    try {
-      const response = await fetch("/api/send-email-digest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: emailDigest.email,
-          jobs: jobsToSend.slice(0, 10),
-          preferences: filters,
-        }),
-      })
+      setEmailDigest((prev) => ({ ...prev, sending: true }))
+      try {
+        const response = await fetch("/api/send-email-digest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-session-token": sessionToken },
+          body: JSON.stringify({
+            email: emailDigest.email,
+            jobs: jobsToSend.slice(0, 10),
+            preferences: filters,
+          }),
+        })
 
-      if (!response.ok) throw new Error("Failed to send email")
+        if (!response.ok) throw new Error("Failed to send email")
 
-      toast({
-        title: "Email Sent!",
-        description: `Job digest sent to ${emailDigest.email}`,
-      })
-    } catch (error) {
-      toast({
-        title: "Email Failed",
-        description: "Failed to send email digest.",
-        variant: "destructive",
-      })
-    } finally {
-      setEmailDigest((prev) => ({ ...prev, sending: false }))
+        toast({
+          title: "Email Sent!",
+          description: `Job digest sent to ${emailDigest.email}`,
+        })
+      } catch (error) {
+        toast({
+          title: "Email Failed",
+          description: "Failed to send email digest.",
+          variant: "destructive",
+        })
+      } finally {
+        setEmailDigest((prev) => ({ ...prev, sending: false }))
+      }
+    },
+    [emailDigest.email, filters, jobs, sessionToken, toast]
+  )
+
+  useEffect(() => {
+    if (!searchData) return
+    const jobCount = searchData.jobs?.length ?? 0
+    setSearchTimestamp(new Date())
+    toast({
+      title: "Search Complete",
+      description: `Found ${jobCount} jobs matching your criteria.`,
+    })
+
+    if (emailDigest.enabled && emailDigest.email && jobCount > 0) {
+      const digestKey = `${searchKey ?? "none"}:${jobCount}`
+      if (lastDigestKey.current !== digestKey) {
+        lastDigestKey.current = digestKey
+        handleSendEmailDigest(searchData.jobs)
+      }
     }
-  }
+  }, [searchData, emailDigest.enabled, emailDigest.email, searchKey, handleSendEmailDigest, toast])
 
   const handleSaveJob = (job: Job) => {
     const isAlreadySaved = savedJobs.some(
@@ -289,6 +332,11 @@ export default function JobFinderApp() {
 
   const filteredJobs = selectedTag === "All" ? jobs : jobs.filter((job) => job.Tags?.includes(selectedTag))
 
+  const isRemoteJob = (job: Job) =>
+    job["Remote Job"] === "remote" ||
+    job["Remote Job"] === "hybrid" ||
+    job.Location?.toLowerCase().includes("remote")
+
   const isJobSaved = (job: Job) => {
     return savedJobs.some((saved) => saved["Job Title"] === job["Job Title"] && saved["Company"] === job["Company"])
   }
@@ -314,39 +362,57 @@ export default function JobFinderApp() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-700/50">
+      <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-700/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <Image
-                src="/favi.png"           // path is relative to /public
-                alt="TechCareers logo"
-                width={40}                
-                height={40}               
-                className="rounded-xl shadow-lg object-cover"
-                priority                  // avoids LCP penalty on the main logo
-              />
+            <div className="flex items-center space-x-3 group cursor-pointer">
+              <div className="relative">
+                <Image
+                  src="/favi.png"
+                  alt="TechCareers logo"
+                  width={40}
+                  height={40}
+                  className="rounded-xl shadow-lg object-cover group-hover:scale-110 transition-transform duration-300"
+                  priority
+                />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-0 group-hover:opacity-20 blur transition-opacity duration-300"></div>
+              </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
                   TechCareers
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Smart Job Discovery
+                <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  Smart Job Discovery ✨
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-4">
               <Button
+                size="sm"
+                asChild
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-200 hover:scale-105 hover:text-white dark:shadow-indigo-900/40 transition-all duration-300 relative overflow-hidden group"
+              >
+                <Link
+                  href="/resume-builder"
+                  className="flex items-center"
+                  title="Tailor your resume to the job posting in minutes"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <Sparkles className="mr-2 h-4 w-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                  <span className="relative z-10">AI Resume Builder</span>
+                </Link>
+              </Button>
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSavedJobs(true)}
-                className="relative"
+                className="relative group hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300"
               >
-                <Bookmark className="w-4 h-4 mr-2" />
+                <Bookmark className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                 Saved
                 {savedJobs.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-gradient-to-r from-blue-600 to-purple-600 animate-pulse">
                     {savedJobs.length}
                   </Badge>
                 )}
@@ -361,74 +427,100 @@ export default function JobFinderApp() {
       {/* Hero Section */}
       {!searchPerformed && (
         <section className="relative overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600/10 to-indigo-600/10 dark:from-blue-600/5 dark:to-indigo-600/5"></div>
+          {/* Animated Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/30 dark:bg-blue-500/20 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute top-40 right-10 w-72 h-72 bg-purple-400/30 dark:bg-purple-500/20 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-400/30 dark:bg-pink-500/20 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+          </div>
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
             <div className="text-center max-w-4xl mx-auto">
-              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8">
-                <span className="bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-800 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
+              {/* Hero Accent */}
+              <div className="relative inline-flex items-center justify-center mb-8">
+                <div className="absolute inset-0 -left-8 -right-8 h-16 rounded-full bg-gradient-to-r from-blue-500/20 via-purple-500/25 to-pink-500/20 blur-3xl animate-aurora" />
+                <div className="absolute -inset-3 rounded-full border border-white/20 dark:border-white/10 animate-orbit" />
+                <div className="relative inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-[0_10px_40px_rgba(79,70,229,0.35)] overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 translate-x-[-120%] animate-shine-slow" />
+                  <div className="relative h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-gradient-to-r from-blue-400 to-purple-500 opacity-70 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_20px_rgba(99,102,241,0.6)]" />
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white tracking-wide">
+                    Curated AI/ML & software roles
+                  </span>
+                  <span className="text-xs text-slate-700 dark:text-white/70">refreshed daily</span>
+                </div>
+              </div>
+
+              <h2 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-8 animate-fade-in-up">
+                <span className="bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-800 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent inline-block hover:scale-105 transition-transform duration-300">
                   Find Your Dream
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent inline-block hover:scale-105 transition-transform duration-300 animate-gradient-x">
                   Tech Career
                 </span>
               </h2>
 
-              <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
+              <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
                 Discover internships and entry-level positions in AI, ML, Data Science, and Software Engineering.
-                Designed for the next generation of tech talent.
+                Designed for the next generation of tech talent. 🚀
               </p>
 
-              <div className="flex flex-wrap justify-center gap-6 mb-16">
+              <div className="flex flex-wrap justify-center gap-6 mb-16 animate-fade-in-up animation-delay-400">
                 <div
                   className="
                     flex items-center space-x-3
-                    bg-white/60 dark:bg-slate-800/60
+                    bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20
                     backdrop-blur-sm
-                    rounded-2xl px-6 py-3
-                    border border-slate-200/50 dark:border-slate-700/50
-                    transition transform duration-200
-                    hover:scale-105 hover:shadow-lg
-                    hover:bg-white/80 dark:hover:bg-slate-800/80
+                    rounded-2xl px-6 py-4
+                    border-2 border-emerald-200/50 dark:border-emerald-700/50
+                    transition-all duration-300
+                    hover:scale-110 hover:shadow-2xl hover:shadow-emerald-500/20
+                    hover:-rotate-2 hover:border-emerald-300
                     cursor-pointer
+                    group
                   "
                 >
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">Live Listings</span>
+                  <TrendingUp className="w-5 h-5 text-emerald-600 group-hover:scale-125 transition-transform duration-300" />
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Live Listings 🔥</span>
                 </div>
 
                 <div
                   className="
                     flex items-center space-x-3
-                    bg-white/60 dark:bg-slate-800/60
+                    bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20
                     backdrop-blur-sm
-                    rounded-2xl px-6 py-3
-                    border border-slate-200/50 dark:border-slate-700/50
-                    transition transform duration-200
-                    hover:scale-105 hover:shadow-lg
-                    hover:bg-white/80 dark:hover:bg-slate-800/80
+                    rounded-2xl px-6 py-4
+                    border-2 border-blue-200/50 dark:border-blue-700/50
+                    transition-all duration-300
+                    hover:scale-110 hover:shadow-2xl hover:shadow-blue-500/20
+                    hover:rotate-2 hover:border-blue-300
                     cursor-pointer
+                    group
                   "
                 >
-                  <Users className="w-5 h-5 text-blue-600" />
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">Smart Matching</span>
+                  <Users className="w-5 h-5 text-blue-600 group-hover:scale-125 transition-transform duration-300" />
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Smart Matching 🎯</span>
                 </div>
 
                 <div
                   className="
                     flex items-center space-x-3
-                    bg-white/60 dark:bg-slate-800/60
+                    bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20
                     backdrop-blur-sm
-                    rounded-2xl px-6 py-3
-                    border border-slate-200/50 dark:border-slate-700/50
-                    transition transform duration-200
-                    hover:scale-105 hover:shadow-lg
-                    hover:bg-white/80 dark:hover:bg-slate-800/80
+                    rounded-2xl px-6 py-4
+                    border-2 border-purple-200/50 dark:border-purple-700/50
+                    transition-all duration-300
+                    hover:scale-110 hover:shadow-2xl hover:shadow-purple-500/20
+                    hover:-rotate-2 hover:border-purple-300
                     cursor-pointer
+                    group
                   "
                 >
-                  <Globe className="w-5 h-5 text-purple-600" />
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">Global Opportunities</span>
+                  <Globe className="w-5 h-5 text-purple-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Global Jobs 🌍</span>
                 </div>
               </div>
             </div>
@@ -439,24 +531,24 @@ export default function JobFinderApp() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         {/* Quick Search Panel */}
-        <Card className="mb-8 border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-xl">
+        <Card className="mb-8 border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardContent className="p-0">
             <div
-              className="p-6 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors"
+              className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 dark:hover:from-blue-900/10 dark:hover:to-purple-900/10 transition-all duration-300 group"
               onClick={() => setShowQuickSearch(!showQuickSearch)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-300">
                     <span className="text-xl">⚡</span>
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Quick Search</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Popular roles, one click away</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Popular roles, one click away 🎯</p>
                   </div>
                 </div>
                 <ChevronDown
-                  className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${showQuickSearch ? "rotate-180" : ""}`}
+                  className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${showQuickSearch ? "rotate-180" : ""}`}
                 />
               </div>
             </div>
@@ -594,7 +686,7 @@ export default function JobFinderApp() {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-4 rounded-lg border border-blue-200/30 dark:border-blue-700/30">
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs">💡</span>
+                        <span className="text-xs"></span>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Pro Tip</p>
@@ -687,17 +779,18 @@ export default function JobFinderApp() {
                     onClick={() => handleSearch()}
                     disabled={loading}
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden group"
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     {loading ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                        Searching...
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3 relative z-10"></div>
+                        <span className="relative z-10">Searching...</span>
                       </>
                     ) : (
                       <>
-                        <Search className="w-5 h-5 mr-2" />
-                        Search Jobs
+                        <Search className="w-5 h-5 mr-2 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                        <span className="relative z-10 font-semibold">Search Jobs</span>
                       </>
                     )}
                   </Button>
@@ -919,21 +1012,25 @@ export default function JobFinderApp() {
                       group border-0
                       bg-gradient-to-r from-emerald-500 to-teal-600
                       text-white
-                      transition-shadow duration-200
-                      hover:shadow-xl hover:ring-2 hover:ring-emerald-300/60
+                      transition-all duration-300
+                      hover:shadow-2xl hover:shadow-emerald-500/40 hover:ring-2 hover:ring-emerald-300/60
                       dark:hover:ring-emerald-400/40
                       rounded-xl
+                      hover:scale-105 hover:-rotate-1
+                      cursor-pointer
+                      relative overflow-hidden
                     "
                   >
-                    <CardContent className="p-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <CardContent className="p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-emerald-100 text-sm font-medium">Total Jobs</p>
-                          <p className="text-3xl font-bold group-hover:scale-105 transition-transform duration-200">
+                          <p className="text-emerald-100 text-sm font-medium">Total Jobs 🎯</p>
+                          <p className="text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
                             {jobs.length}
                           </p>
                         </div>
-                        <TrendingUp className="w-8 h-8 text-emerald-200" />
+                        <TrendingUp className="w-8 h-8 text-emerald-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
                       </div>
                     </CardContent>
                   </Card>
@@ -944,21 +1041,25 @@ export default function JobFinderApp() {
                       group border-0
                       bg-gradient-to-r from-blue-500 to-indigo-600
                       text-white
-                      transition-shadow duration-200
-                      hover:shadow-xl hover:ring-2 hover:ring-indigo-300/60
+                      transition-all duration-300
+                      hover:shadow-2xl hover:shadow-blue-500/40 hover:ring-2 hover:ring-indigo-300/60
                       dark:hover:ring-indigo-400/40
                       rounded-xl
+                      hover:scale-105 hover:rotate-1
+                      cursor-pointer
+                      relative overflow-hidden
                     "
                   >
-                    <CardContent className="p-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <CardContent className="p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-blue-100 text-sm font-medium">Companies</p>
-                          <p className="text-3xl font-bold group-hover:scale-105 transition-transform duration-200">
+                          <p className="text-blue-100 text-sm font-medium">Companies 🏢</p>
+                          <p className="text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
                             {new Set(jobs.map((job) => job.Company)).size}
                           </p>
                         </div>
-                        <Building2 className="w-8 h-8 text-blue-200" />
+                        <Building2 className="w-8 h-8 text-blue-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
                       </div>
                     </CardContent>
                   </Card>
@@ -969,27 +1070,25 @@ export default function JobFinderApp() {
                       group border-0
                       bg-gradient-to-r from-purple-500 to-pink-600
                       text-white
-                      transition-shadow duration-200
-                      hover:shadow-xl hover:ring-2 hover:ring-pink-300/60
+                      transition-all duration-300
+                      hover:shadow-2xl hover:shadow-purple-500/40 hover:ring-2 hover:ring-pink-300/60
                       dark:hover:ring-pink-400/40
                       rounded-xl
+                      hover:scale-105 hover:-rotate-1
+                      cursor-pointer
+                      relative overflow-hidden
                     "
                   >
-                    <CardContent className="p-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <CardContent className="p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-purple-100 text-sm font-medium">Remote Jobs</p>
-                          <p className="text-3xl font-bold group-hover:scale-105 transition-transform duration-200">
-                            {
-                              jobs.filter(
-                                (job) =>
-                                  job["Remote Job"] === "🏠 Remote" ||
-                                  job.Location?.toLowerCase().includes("remote"),
-                              ).length
-                            }
+                          <p className="text-purple-100 text-sm font-medium">Remote Jobs 🏠</p>
+                          <p className="text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+                            {jobs.filter((job) => isRemoteJob(job)).length}
                           </p>
                         </div>
-                        <Globe className="w-8 h-8 text-purple-200" />
+                        <Globe className="w-8 h-8 text-purple-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
                       </div>
                     </CardContent>
                   </Card>
@@ -1000,21 +1099,25 @@ export default function JobFinderApp() {
                       group border-0
                       bg-gradient-to-r from-orange-500 to-red-600
                       text-white
-                      transition-shadow duration-200
-                      hover:shadow-xl hover:ring-2 hover:ring-orange-300/60
+                      transition-all duration-300
+                      hover:shadow-2xl hover:shadow-orange-500/40 hover:ring-2 hover:ring-orange-300/60
                       dark:hover:ring-orange-400/40
                       rounded-xl
+                      hover:scale-105 hover:rotate-1
+                      cursor-pointer
+                      relative overflow-hidden
                     "
                   >
-                    <CardContent className="p-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <CardContent className="p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-orange-100 text-sm font-medium">Locations</p>
-                          <p className="text-3xl font-bold group-hover:scale-105 transition-transform duration-200">
+                          <p className="text-orange-100 text-sm font-medium">Locations 📍</p>
+                          <p className="text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
                             {new Set(jobs.map((job) => job.Location)).size}
                           </p>
                         </div>
-                        <MapPin className="w-8 h-8 text-orange-200" />
+                        <MapPin className="w-8 h-8 text-orange-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
                       </div>
                     </CardContent>
                   </Card>
@@ -1064,7 +1167,7 @@ export default function JobFinderApp() {
               ) : (
                 <Card className="border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl transition-shadow hover:shadow-lg">
                   <CardContent className="text-center py-16">
-                    <div className="text-6xl mb-6">🔍</div>
+                    <div className="text-6xl mb-6"></div>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
                       No jobs found
                     </h3>
@@ -1118,7 +1221,7 @@ export default function JobFinderApp() {
                               {job["Job Title"]}
                             </h3>
                             <p className="text-slate-600 dark:text-slate-400 text-sm">
-                              {job.Company} • {job.Location}
+                              {job.Company}  {job.Location}
                             </p>
                           </div>
                           <Button
@@ -1133,7 +1236,7 @@ export default function JobFinderApp() {
 
                         <div className="flex items-center justify-between">
                           <div className="flex flex-wrap gap-1">
-                            {job["Remote Job"] === "🏠 Remote" && (
+                            {isRemoteJob(job) && (
                               <Badge variant="secondary" className="text-xs">
                                 Remote
                               </Badge>
@@ -1169,7 +1272,7 @@ export default function JobFinderApp() {
 
 // Job Card Component
 function JobCard({ job, onSave, isSaved }: { job: Job; onSave: () => void; isSaved: boolean }) {
-  const isRemote = job["Remote Job"] === "🏠 Remote" || job.Location?.toLowerCase().includes("remote")
+  const isRemote = job["Remote Job"] === "remote" || job["Remote Job"] === "hybrid" || job.Location?.toLowerCase().includes("remote")
   const tags = job.Tags
     ? job.Tags.split(",")
         .map((tag) => tag.trim())
@@ -1222,7 +1325,7 @@ function JobCard({ job, onSave, isSaved }: { job: Job; onSave: () => void; isSav
         <div className="flex flex-wrap gap-2 mb-4">
           {isRemote && (
             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-0">
-              🏠 Remote
+               Remote
             </Badge>
           )}
           {job["Job Title"]?.toLowerCase().includes("intern") && (
@@ -1283,7 +1386,7 @@ function JobCard({ job, onSave, isSaved }: { job: Job; onSave: () => void; isSav
 
 // Job List Item Component
 function JobListItem({ job, onSave, isSaved }: { job: Job; onSave: () => void; isSaved: boolean }) {
-  const isRemote = job["Remote Job"] === "🏠 Remote" || job.Location?.toLowerCase().includes("remote")
+  const isRemote = job["Remote Job"] === "remote" || job["Remote Job"] === "hybrid" || job.Location?.toLowerCase().includes("remote")
   const tags = job.Tags
     ? job.Tags.split(",")
         .map((tag) => tag.trim())
@@ -1320,7 +1423,7 @@ function JobListItem({ job, onSave, isSaved }: { job: Job; onSave: () => void; i
               <div className="flex flex-wrap gap-2">
                 {isRemote && (
                   <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-0">
-                    🏠 Remote
+                     Remote
                   </Badge>
                 )}
                 {tags.map((tag, index) => (
@@ -1346,3 +1449,6 @@ function JobListItem({ job, onSave, isSaved }: { job: Job; onSave: () => void; i
     </Card>
   )
 }
+
+
+
