@@ -9,7 +9,10 @@ interface SearchFilters {
   sortBy: string
 }
 
+type RemoteStatus = "remote" | "onsite" | "hybrid"
+
 interface Job {
+  Id?: string
   "Job Title": string
   Company: string
   Location: string
@@ -19,8 +22,17 @@ interface Job {
   "Posting Date": string
   QueryFlag: string
   Tags: string
-  "Remote Job": string
+  "Remote Job": RemoteStatus
 }
+
+const RESULTS_PER_PAGE = 10
+const MAX_PAGES = 3
+const CACHE_TTL_MS = 5 * 60 * 1000
+const CACHE_MAX_RESULTS = 120
+const REQUEST_TIMEOUT_MS = 12_000
+
+type CacheEntry = { timestamp: number; jobs: Job[] }
+const searchCache = new Map<string, CacheEntry>()
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,67 +47,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "At least one job type must be selected" }, { status: 400 })
     }
 
-    // Get API key from environment
     const apiKey = process.env.RAPIDAPI_KEY
     if (!apiKey) {
       return NextResponse.json({ error: "API configuration error" }, { status: 500 })
     }
 
+    const cacheKey = buildCacheKey(filters)
+    const cached = searchCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json({ jobs: cached.jobs.slice(0, filters.maxResults) })
+    }
+
+    const requestedPages = Math.max(1, Math.ceil(filters.maxResults / RESULTS_PER_PAGE))
+    const numPages = Math.min(requestedPages, MAX_PAGES)
+
+    const jobTypePromises = filters.jobTypes.map((jobType) =>
+      fetchJobsForType({
+        jobType,
+        filters,
+        apiKey,
+        numPages,
+      })
+    )
+
     const allJobs: Job[] = []
-
-    // Term mapping for different job types
-    const termMap: Record<string, string> = {
-      "Fall 2025 Internship": "fall 2025 internship",
-      "Spring 2026 Internship": "spring 2026 internship",
-      "Summer 2026 Internship": "summer 2026 internship",
-      "Entry-Level / New-Grad Full-Time": "entry level new grad",
-    }
-
-    // Search for each selected job type
-    for (const jobType of filters.jobTypes) {
-      const searchTerms = termMap[jobType] || ""
-
-      // Build query
-      let query = `${filters.keyword.trim()} ${searchTerms}`
-      if (filters.location?.trim()) {
-        query += ` ${filters.location.trim()}`
+    const settled = await Promise.allSettled(jobTypePromises)
+    settled.forEach((result) => {
+      if (result.status === "fulfilled") {
+        allJobs.push(...result.value)
+      } else {
+        console.error("JSearch request failed:", result.reason)
       }
-      if (filters.locationMode === "Remote Only") {
-        query += " remote"
-      }
-
-      // Make API request to JSearch
-      const searchParams = new URLSearchParams({
-        query,
-        page: "1",
-        num_pages: "1",
-        date_posted: "all",
-      })
-
-      const apiUrl = `https://jsearch.p.rapidapi.com/search?${searchParams.toString()}`
-
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "X-RapidAPI-Key": apiKey,
-          "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
-        },
-        // ⚠️ no `params` here
-      })
-
-      if (!response.ok) {
-        console.error(`JSearch API error: ${response.status}`)
-        continue
-      }
-
-      const data = await response.json()
-
-      if (data.status === "OK" && data.data) {
-        const jobs = data.data.map((job: any) => extractJobData(job, jobType)).filter((job: Job | null) => job !== null)
-
-        allJobs.push(...jobs)
-      }
-    }
+    })
 
     // Apply location filtering
     let filteredJobs = allJobs
@@ -116,11 +99,17 @@ export async function POST(request: NextRequest) {
       filteredJobs.sort((a, b) => a.Company.localeCompare(b.Company))
     }
 
-    // Add job tags
+    // Add job tags and dedupe
     const taggedJobs = addJobTags(filteredJobs)
+    const deduped = dedupeJobs(taggedJobs)
 
     // Limit results
-    const limitedJobs = taggedJobs.slice(0, filters.maxResults)
+    const limitedJobs = deduped.slice(0, filters.maxResults)
+
+    searchCache.set(cacheKey, {
+      timestamp: Date.now(),
+      jobs: deduped.slice(0, CACHE_MAX_RESULTS),
+    })
 
     return NextResponse.json({ jobs: limitedJobs })
   } catch (error) {
@@ -129,9 +118,77 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function fetchJobsForType({
+  jobType,
+  filters,
+  apiKey,
+  numPages,
+}: {
+  jobType: string
+  filters: SearchFilters
+  apiKey: string
+  numPages: number
+}): Promise<Job[]> {
+  const termMap: Record<string, string> = {
+    "Fall 2025 Internship": "fall 2025 internship",
+    "Spring 2026 Internship": "spring 2026 internship",
+    "Summer 2026 Internship": "summer 2026 internship",
+    "Entry-Level / New-Grad Full-Time": "entry level new grad",
+  }
+
+  const searchTerms = termMap[jobType] || ""
+
+  let query = `${filters.keyword.trim()} ${searchTerms}`.trim()
+  if (filters.location?.trim()) {
+    query += ` ${filters.location.trim()}`
+  }
+  if (filters.locationMode === "Remote Only") {
+    query += " remote"
+  }
+
+  const searchParams = new URLSearchParams({
+    query,
+    page: "1",
+    num_pages: String(numPages),
+    date_posted: "all",
+  })
+
+  const apiUrl = `https://jsearch.p.rapidapi.com/search?${searchParams.toString()}`
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  const response = await fetch(apiUrl, {
+    method: "GET",
+    headers: {
+      "X-RapidAPI-Key": apiKey,
+      "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
+    },
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout))
+
+  if (!response.ok) {
+    console.error(`JSearch API error for ${jobType}: ${response.status}`)
+    return []
+  }
+
+  const data = await response.json()
+  if (data.status !== "OK" || !Array.isArray(data.data)) {
+    return []
+  }
+
+  return data.data
+    .map((job: any) => extractJobData(job, jobType))
+    .filter((job: Job | null): job is Job => job !== null)
+}
+
 function extractJobData(jobJson: any, queryFlag: string): Job | null {
   try {
+    const remoteStatus = getRemoteStatus(jobJson)
+    const jobId = jobJson.job_id || jobJson.job_posting_id || jobJson.id || jobJson._id
+
     return {
+      Id: jobId,
       "Job Title": jobJson.job_title?.trim() || "",
       Company: jobJson.employer_name?.trim() || "",
       Location: formatLocation(jobJson),
@@ -141,7 +198,7 @@ function extractJobData(jobJson: any, queryFlag: string): Job | null {
       "Posting Date": formatPostingDate(jobJson),
       QueryFlag: queryFlag,
       Tags: "General Tech",
-      "Remote Job": jobJson.job_is_remote ? "🏠 Remote" : "🏢 On-site",
+      "Remote Job": remoteStatus,
     }
   } catch (error) {
     return null
@@ -193,9 +250,33 @@ function formatPostingDate(jobJson: any): string {
 }
 
 function isRemoteJob(job: Job): boolean {
-  const remoteKeywords = ["remote", "work from home", "wfh", "telecommute", "virtual"]
+  const remoteKeywords = ["remote", "work from home", "wfh", "telecommute", "virtual", "hybrid"]
   const text = `${job["Job Title"]} ${job.Location} ${job["Job Type"]}`.toLowerCase()
-  return remoteKeywords.some((keyword) => text.includes(keyword)) || job["Remote Job"] === "🏠 Remote"
+  return job["Remote Job"] === "remote" || job["Remote Job"] === "hybrid" || remoteKeywords.some((keyword) => text.includes(keyword))
+}
+
+function getRemoteStatus(jobJson: any): RemoteStatus {
+  if (jobJson.job_is_remote) return "remote"
+
+  const location = `${jobJson.job_location || ""} ${jobJson.job_country || ""} ${jobJson.job_city || ""}`.toLowerCase()
+  if (location.includes("hybrid")) return "hybrid"
+  if (location.includes("remote")) return "remote"
+
+  return "onsite"
+}
+
+function dedupeJobs(jobs: Job[]): Job[] {
+  const seen = new Set<string>()
+  const deduped: Job[] = []
+
+  for (const job of jobs) {
+    const key = `${job.Id || ""}::${job["Apply Link"] || ""}::${job["Job Title"]}::${job.Company}`.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    deduped.push(job)
+  }
+
+  return deduped
 }
 
 function addJobTags(jobs: Job[]): Job[] {
@@ -320,5 +401,16 @@ function addJobTags(jobs: Job[]): Job[] {
       ...job,
       Tags: matchingTags.slice(0, 3).join(", ") || "General Tech",
     }
+  })
+}
+
+function buildCacheKey(filters: SearchFilters) {
+  return JSON.stringify({
+    keyword: filters.keyword.trim().toLowerCase(),
+    location: filters.location.trim().toLowerCase(),
+    jobTypes: [...filters.jobTypes].sort(),
+    locationMode: filters.locationMode,
+    maxResults: Math.min(filters.maxResults, CACHE_MAX_RESULTS),
+    sortBy: filters.sortBy,
   })
 }
