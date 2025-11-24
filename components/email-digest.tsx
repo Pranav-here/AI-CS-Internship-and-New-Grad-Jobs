@@ -42,7 +42,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
   const [sending, setSending] = useState(false)
   const { toast } = useToast()
 
-  // stricter: must end with dot‑something (at least 2 chars)
+  // stricter: must end with dotsomething (at least 2 chars)
   const validateEmail = (e: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.trim())
 
@@ -88,7 +88,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
     } catch {
       toast({
         title: "Email Failed",
-        description: "We couldn’t send the digest. Try again later.",
+        description: "We couldn't send the digest. Try again later.",
         variant: "destructive",
       })
     } finally {
@@ -159,7 +159,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
               {sending ? (
                 <>
                   <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Sending…
+                  Sending
                 </>
               ) : (
                 <>
@@ -170,7 +170,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
             </Button>
 
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              We’ll email the top {Math.min(jobs.length || 10, 10)} matching roles.
+              Well email the top {Math.min(jobs.length || 10, 10)} matching roles.
             </p>
           </div>
         )}
