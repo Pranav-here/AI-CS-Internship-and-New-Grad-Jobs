@@ -126,7 +126,8 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
           <TableBody>
             {jobs.map((job, index) => {
               const isRemote =
-                job["Remote Job"] === "🏠 Remote" ||
+                job["Remote Job"] === "remote" ||
+                job["Remote Job"] === "hybrid" ||
                 job.Location?.toLowerCase().includes("remote")
 
               const tags = job.Tags
@@ -176,7 +177,7 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
                   <TableCell className="text-center">
                     {isRemote && (
                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        ✓
+                        
                       </Badge>
                     )}
                   </TableCell>
@@ -246,3 +247,4 @@ function downloadCSV(csv: string, filename: string) {
   a.click()
   window.URL.revokeObjectURL(url)
 }
+
