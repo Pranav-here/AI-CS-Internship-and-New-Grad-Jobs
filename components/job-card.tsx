@@ -26,7 +26,8 @@ interface JobCardProps {
 
 export function JobCard({ job, onSave, isSaved }: JobCardProps) {
   const isRemote =
-    job["Remote Job"] === "🏠 Remote" ||
+    job["Remote Job"] === "remote" ||
+    job["Remote Job"] === "hybrid" ||
     job.Location?.toLowerCase().includes("remote") ||
     job["Job Title"]?.toLowerCase().includes("remote")
 
@@ -105,7 +106,7 @@ export function JobCard({ job, onSave, isSaved }: JobCardProps) {
         <div className="flex flex-wrap gap-2">
           {isRemote && (
             <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-              🏠 Remote
+               Remote
             </Badge>
           )}
           {job["Job Title"]?.toLowerCase().includes("intern") && (
@@ -169,3 +170,4 @@ export function JobCard({ job, onSave, isSaved }: JobCardProps) {
     </Card>
   )
 }
+
