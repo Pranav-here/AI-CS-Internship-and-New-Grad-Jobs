@@ -15,7 +15,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
   const quickSearchOptions = [
     {
       category: "Data Science",
-      icon: "🍃",
+      icon: "DS",
       searches: [
         { label: "DS Intern (Fall 2025)", keyword: "data science", type: "Fall 2025 Internship" },
         { label: "Junior Data Scientist", keyword: "data scientist", type: "Entry-Level / New-Grad Full-Time" },
@@ -24,7 +24,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
     },
     {
       category: "Machine Learning",
-      icon: "🤖",
+      icon: "ML",
       searches: [
         { label: "ML Engineer Intern", keyword: "machine learning intern", type: "Fall 2025 Internship" },
         { label: "ML Engineer Entry", keyword: "machine learning engineer", type: "Entry-Level / New-Grad Full-Time" },
@@ -33,7 +33,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
     },
     {
       category: "Software Engineering",
-      icon: "💻",
+      icon: "SE",
       searches: [
         { label: "Entry Software Engineer", keyword: "software engineer", type: "Entry-Level / New-Grad Full-Time" },
         { label: "Frontend Intern", keyword: "frontend developer intern", type: "Summer 2026 Internship" },
@@ -42,7 +42,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
     },
     {
       category: "AI & NLP",
-      icon: "🧠",
+      icon: "AI",
       searches: [
         { label: "AI Research Intern", keyword: "artificial intelligence intern", type: "Fall 2025 Internship" },
         { label: "NLP Engineer Intern", keyword: "natural language processing intern", type: "Summer 2026 Internship" },
@@ -51,7 +51,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
     },
     {
       category: "Full-Stack & BI",
-      icon: "🌐",
+      icon: "FS",
       searches: [
         { label: "Full-Stack Entry", keyword: "full stack developer", type: "Entry-Level / New-Grad Full-Time" },
         { label: "BI Intern", keyword: "business intelligence intern", type: "Fall 2025 Internship" },
@@ -61,26 +61,26 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
   ]
 
   const remoteSearches = [
-    { label: "🏠 Remote SWE Intern", keyword: "software engineer", type: "Spring 2026 Internship", remote: true },
+    { label: "Remote SWE Intern", keyword: "software engineer", type: "Spring 2026 Internship", remote: true },
     {
-      label: "🏠 Remote Data Science",
+      label: "Remote Data Science",
       keyword: "data science",
       type: "Entry-Level / New-Grad Full-Time",
       remote: true,
     },
     {
-      label: "🏠 Remote ML Engineer",
+      label: "Remote ML Engineer",
       keyword: "machine learning",
       type: "Entry-Level / New-Grad Full-Time",
       remote: true,
     },
     {
-      label: "🏠 Remote Python Dev",
+      label: "Remote Python Dev",
       keyword: "python developer",
       type: "Entry-Level / New-Grad Full-Time",
       remote: true,
     },
-    { label: "🏠 Remote DevOps", keyword: "devops engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
+    { label: "Remote DevOps", keyword: "devops engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
   ]
 
   return (
@@ -90,7 +90,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
           <CardHeader className="cursor-pointer hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors rounded-t-lg">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center">🚀 Quick Search Options</CardTitle>
+                <CardTitle className="flex items-center"> Quick Search Options</CardTitle>
                 <CardDescription>Click any button below to instantly search for popular job types</CardDescription>
               </div>
               {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -127,7 +127,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
 
             {/* Remote Searches */}
             <div className="border-t pt-4">
-              <h4 className="font-semibold text-sm mb-3">🏠 Remote & Popular Searches</h4>
+              <h4 className="font-semibold text-sm mb-3">Remote & Popular Searches</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2">
                 {remoteSearches.map((search) => (
                   <Button
@@ -146,8 +146,8 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
             {/* Tip */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                💡 <strong>Tip:</strong> Click any button above to auto-fill the search form below, then click 'Search
-                Jobs' to find opportunities!
+                <strong>Tip:</strong> Click any button above to auto-fill the search form below, then click "Search
+                Jobs" to find opportunities!
               </p>
             </div>
           </CardContent>
@@ -156,3 +156,4 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
     </Card>
   )
 }
+
