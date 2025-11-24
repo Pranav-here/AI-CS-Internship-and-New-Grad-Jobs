@@ -51,7 +51,7 @@ export function SavedJobsDrawer({ isOpen, onClose, savedJobs, onRemove }: SavedJ
         <div className="mt-6 space-y-4">
           {savedJobs.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-4xl mb-4">📚</div>
+              <div className="text-4xl mb-4">*</div>
               <h3 className="text-lg font-semibold mb-2">No saved jobs yet</h3>
               <p className="text-gray-600 dark:text-gray-400">
                 Save jobs while browsing to keep track of opportunities
@@ -59,7 +59,10 @@ export function SavedJobsDrawer({ isOpen, onClose, savedJobs, onRemove }: SavedJ
             </div>
           ) : (
             savedJobs.map((job, index) => {
-              const isRemote = job["Remote Job"] === "🏠 Remote" || job.Location?.toLowerCase().includes("remote")
+              const isRemote =
+                job["Remote Job"] === "remote" ||
+                job["Remote Job"] === "hybrid" ||
+                job.Location?.toLowerCase().includes("remote")
               const tags = job.Tags
                 ? job.Tags.split(",")
                     .map((tag) => tag.trim())
@@ -73,7 +76,7 @@ export function SavedJobsDrawer({ isOpen, onClose, savedJobs, onRemove }: SavedJ
                       <div className="flex-1">
                         <CardTitle className="text-base leading-tight mb-1">{job["Job Title"]}</CardTitle>
                         <CardDescription>
-                          {job.Company} • {job.Location}
+                          {job.Company} | {job.Location}
                         </CardDescription>
                       </div>
                       <Button
@@ -95,7 +98,7 @@ export function SavedJobsDrawer({ isOpen, onClose, savedJobs, onRemove }: SavedJ
                           variant="secondary"
                           className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs"
                         >
-                          🏠 Remote
+                          Remote
                         </Badge>
                       )}
                       {tags.map((tag, tagIndex) => (
@@ -152,3 +155,4 @@ function downloadCSV(csv: string, filename: string) {
   a.click()
   window.URL.revokeObjectURL(url)
 }
+
