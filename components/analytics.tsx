@@ -31,12 +31,12 @@ interface AnalyticsProps {
 export function Analytics({ jobs, tagStats }: AnalyticsProps) {
   const totalJobs = jobs.length
   const uniqueCompanies = new Set(jobs.map((j) => j.Company)).size
-  const remoteJobs = jobs.filter(
-    (j) =>
-      j["Remote Job"] === "🏠 Remote" ||
-      j.Location?.toLowerCase().includes("remote") ||
-      j["Job Title"]?.toLowerCase().includes("remote"),
-  ).length
+  const isRemoteJob = (job: Job) =>
+    job["Remote Job"] === "remote" ||
+    job["Remote Job"] === "hybrid" ||
+    job.Location?.toLowerCase().includes("remote") ||
+    job["Job Title"]?.toLowerCase().includes("remote")
+  const remoteJobs = jobs.filter(isRemoteJob).length
   const uniqueLocations = new Set(jobs.map((j) => j.Location)).size
 
   const topTags = Object.entries(tagStats)
