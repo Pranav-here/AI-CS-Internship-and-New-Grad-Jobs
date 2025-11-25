@@ -1,6 +1,6 @@
 "use client"
 
-import { ExternalLink, MapPin, Calendar, Building2, Bookmark, BookmarkCheck } from "lucide-react"
+import { ExternalLink, MapPin, Calendar, Building2, Bookmark, BookmarkCheck, Search } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -106,7 +106,7 @@ export function JobCard({ job, onSave, isSaved }: JobCardProps) {
         <div className="flex flex-wrap gap-2">
           {isRemote && (
             <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-               Remote
+              Remote
             </Badge>
           )}
           {job["Job Title"]?.toLowerCase().includes("intern") && (
@@ -140,24 +140,41 @@ export function JobCard({ job, onSave, isSaved }: JobCardProps) {
         )}
 
         {/* Actions */}
-        <Button
-          asChild
-          className="
-            flex-1 bg-gradient-to-r from-blue-600 to-purple-600
-            hover:from-blue-700 hover:to-purple-700
-            focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-          "
-        >
-          <a
-            href={job["Apply Link"]}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center"
+        <div className="flex gap-2">
+          <Button
+            asChild
+            className="
+              flex-1 bg-gradient-to-r from-blue-600 to-purple-600
+              hover:from-blue-700 hover:to-purple-700
+              focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+            "
           >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Apply&nbsp;Now
-          </a>
-        </Button>
+            <a
+              href={job["Apply Link"]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Apply&nbsp;Now
+            </a>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="hover:bg-slate-50 dark:hover:bg-slate-800"
+            title={`Google "${job.Company}" reviews and info`}
+          >
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(job.Company + " reviews careers")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center px-3"
+            >
+              <Search className="w-4 h-4" />
+            </a>
+          </Button>
+        </div>
 
         {/* Footer */}
         {job["Posting Date"] && job["Posting Date"] !== "Not available" && (

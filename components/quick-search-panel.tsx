@@ -17,7 +17,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
       category: "Data Science",
       icon: "DS",
       searches: [
-        { label: "DS Intern (Fall 2025)", keyword: "data science", type: "Fall 2025 Internship" },
+        { label: "DS Intern (Winter 2025)", keyword: "data science", type: "Winter 2025 Internship" },
         { label: "Junior Data Scientist", keyword: "data scientist", type: "Entry-Level / New-Grad Full-Time" },
         { label: "Data Analyst Intern", keyword: "data analyst intern", type: "Summer 2026 Internship" },
       ],
@@ -26,7 +26,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
       category: "Machine Learning",
       icon: "ML",
       searches: [
-        { label: "ML Engineer Intern", keyword: "machine learning intern", type: "Fall 2025 Internship" },
+        { label: "ML Engineer Intern", keyword: "machine learning intern", type: "Winter 2025 Internship" },
         { label: "ML Engineer Entry", keyword: "machine learning engineer", type: "Entry-Level / New-Grad Full-Time" },
         { label: "ML Research Intern", keyword: "machine learning research intern", type: "Spring 2026 Internship" },
       ],
@@ -44,7 +44,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
       category: "AI & NLP",
       icon: "AI",
       searches: [
-        { label: "AI Research Intern", keyword: "artificial intelligence intern", type: "Fall 2025 Internship" },
+        { label: "AI Research Intern", keyword: "artificial intelligence intern", type: "Winter 2025 Internship" },
         { label: "NLP Engineer Intern", keyword: "natural language processing intern", type: "Summer 2026 Internship" },
         { label: "AI Researcher", keyword: "AI researcher", type: "Entry-Level / New-Grad Full-Time" },
       ],
@@ -54,7 +54,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
       icon: "FS",
       searches: [
         { label: "Full-Stack Entry", keyword: "full stack developer", type: "Entry-Level / New-Grad Full-Time" },
-        { label: "BI Intern", keyword: "business intelligence intern", type: "Fall 2025 Internship" },
+        { label: "BI Intern", keyword: "business intelligence intern", type: "Winter 2025 Internship" },
         { label: "Data Engineer Entry", keyword: "data engineer", type: "Entry-Level / New-Grad Full-Time" },
       ],
     },
@@ -90,7 +90,7 @@ export function QuickSearchPanel({ isOpen, onToggle, onQuickSearch }: QuickSearc
           <CardHeader className="cursor-pointer hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors rounded-t-lg">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center"> Quick Search Options</CardTitle>
+                <CardTitle className="flex items-center">Quick Search Options</CardTitle>
                 <CardDescription>Click any button below to instantly search for popular job types</CardDescription>
               </div>
               {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}

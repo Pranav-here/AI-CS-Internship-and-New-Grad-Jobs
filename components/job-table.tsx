@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ExternalLink, Download, Bookmark } from "lucide-react"
+import { ExternalLink, Download, Bookmark, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -105,7 +105,8 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
 
       {/* Table */}
       <div className="rounded-xl border bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader className="bg-gray-50 dark:bg-gray-700/40">
             <TableRow>
               <TableHead className="w-12 text-center">
@@ -177,7 +178,7 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
                   <TableCell className="text-center">
                     {isRemote && (
                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                        
+                        Remote
                       </Badge>
                     )}
                   </TableCell>
@@ -213,6 +214,20 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
                       >
                         {isJobSaved(job) ? "Saved" : "Save"}
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                        title={`Google "${job.Company}" reviews and info`}
+                      >
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(job.Company + " reviews careers")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Search className="w-4 h-4" />
+                        </a>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -220,6 +235,7 @@ export function JobTable({ jobs, onSave, savedJobs }: JobTableProps) {
             })}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   )
