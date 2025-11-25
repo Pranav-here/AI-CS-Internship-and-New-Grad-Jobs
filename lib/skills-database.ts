@@ -217,6 +217,208 @@ export const SKILLS_DATABASE: Skill[] = [
     ],
   },
 
+  // AI Engineering & LLM Tools
+  {
+    name: "LangGraph",
+    category: "AI Engineering",
+    resources: [
+      { name: "LangGraph Documentation", url: "https://langchain-ai.github.io/langgraph/", type: "docs" },
+      { name: "LangGraph Tutorial", url: "https://www.youtube.com/watch?v=9BPCV5TYPmg", type: "video" },
+    ],
+  },
+  {
+    name: "LangSmith",
+    category: "AI Engineering",
+    resources: [
+      { name: "LangSmith Documentation", url: "https://docs.smith.langchain.com/", type: "docs" },
+      { name: "LangSmith Tutorial", url: "https://www.youtube.com/watch?v=dKGNl0FNkwU", type: "video" },
+    ],
+  },
+  {
+    name: "LlamaIndex",
+    category: "AI Engineering",
+    resources: [
+      { name: "LlamaIndex Documentation", url: "https://docs.llamaindex.ai/en/stable/", type: "docs" },
+      { name: "LlamaIndex Crash Course", url: "https://www.youtube.com/watch?v=fj7I7M1nRoY", type: "video" },
+    ],
+  },
+  {
+    name: "AutoGen",
+    category: "AI Engineering",
+    resources: [
+      { name: "AutoGen Documentation", url: "https://microsoft.github.io/autogen/", type: "docs" },
+      { name: "AutoGen Multi-Agent Tutorial", url: "https://www.youtube.com/watch?v=vU2S6dVf79M", type: "video" },
+    ],
+  },
+  {
+    name: "CrewAI",
+    category: "AI Engineering",
+    resources: [
+      { name: "CrewAI Documentation", url: "https://docs.crewai.com/", type: "docs" },
+      { name: "CrewAI Tutorial", url: "https://www.youtube.com/watch?v=tnejrr-0a94", type: "video" },
+    ],
+  },
+  {
+    name: "Pinecone",
+    category: "AI Engineering",
+    resources: [
+      { name: "Pinecone Documentation", url: "https://docs.pinecone.io/", type: "docs" },
+      { name: "Pinecone Vector Database Tutorial", url: "https://www.youtube.com/watch?v=gTXKxHGkHAE", type: "video" },
+    ],
+  },
+  {
+    name: "Weaviate",
+    category: "AI Engineering",
+    resources: [
+      { name: "Weaviate Documentation", url: "https://weaviate.io/developers/weaviate", type: "docs" },
+      { name: "Weaviate Vector Database Course", url: "https://www.youtube.com/watch?v=c_2O7CPgQc0", type: "video" },
+    ],
+  },
+  {
+    name: "ChromaDB",
+    category: "AI Engineering",
+    resources: [
+      { name: "Chroma Documentation", url: "https://docs.trychroma.com/", type: "docs" },
+      { name: "ChromaDB Tutorial", url: "https://www.youtube.com/watch?v=QdDoFfkVkcw", type: "video" },
+    ],
+  },
+  {
+    name: "Qdrant",
+    category: "AI Engineering",
+    resources: [
+      { name: "Qdrant Documentation", url: "https://qdrant.tech/documentation/", type: "docs" },
+      { name: "Qdrant Vector Database Tutorial", url: "https://www.youtube.com/watch?v=SAIWdT4dbH4", type: "video" },
+    ],
+  },
+  {
+    name: "Ollama",
+    category: "AI Engineering",
+    resources: [
+      { name: "Ollama Documentation", url: "https://github.com/ollama/ollama", type: "docs" },
+      { name: "Ollama Local LLM Tutorial", url: "https://www.youtube.com/watch?v=Wjrdr0NU4Sk", type: "video" },
+    ],
+  },
+  {
+    name: "vLLM",
+    category: "AI Engineering",
+    resources: [
+      { name: "vLLM Documentation", url: "https://docs.vllm.ai/en/latest/", type: "docs" },
+      { name: "vLLM Inference Tutorial", url: "https://www.youtube.com/watch?v=80bIUggRJf4", type: "video" },
+    ],
+  },
+  {
+    name: "Haystack",
+    category: "AI Engineering",
+    resources: [
+      { name: "Haystack Documentation", url: "https://docs.haystack.deepset.ai/docs/intro", type: "docs" },
+      { name: "Haystack NLP Framework Tutorial", url: "https://www.youtube.com/watch?v=bMeKCOCmfN0", type: "video" },
+    ],
+  },
+  {
+    name: "Semantic Kernel",
+    category: "AI Engineering",
+    resources: [
+      { name: "Semantic Kernel Documentation", url: "https://learn.microsoft.com/en-us/semantic-kernel/overview/", type: "docs" },
+      { name: "Semantic Kernel Tutorial", url: "https://www.youtube.com/watch?v=Dqx8yMxNbJY", type: "video" },
+    ],
+  },
+  {
+    name: "DSPy",
+    category: "AI Engineering",
+    resources: [
+      { name: "DSPy Documentation", url: "https://dspy-docs.vercel.app/", type: "docs" },
+      { name: "DSPy Programming Tutorial", url: "https://www.youtube.com/watch?v=41EfOY0Ldkc", type: "video" },
+    ],
+  },
+  {
+    name: "LangFuse",
+    category: "AI Engineering",
+    resources: [
+      { name: "LangFuse Documentation", url: "https://langfuse.com/docs", type: "docs" },
+      { name: "LangFuse Observability Tutorial", url: "https://www.youtube.com/watch?v=i8YGcPkFEqo", type: "video" },
+    ],
+  },
+  {
+    name: "Weights & Biases",
+    category: "AI Engineering",
+    resources: [
+      { name: "W&B Documentation", url: "https://docs.wandb.ai/", type: "docs" },
+      { name: "Weights & Biases MLOps Tutorial", url: "https://www.youtube.com/watch?v=gnD8BFuyVUA", type: "video" },
+    ],
+  },
+  {
+    name: "OpenAI API",
+    category: "AI Engineering",
+    resources: [
+      { name: "OpenAI API Documentation", url: "https://platform.openai.com/docs/introduction", type: "docs" },
+      { name: "OpenAI API Tutorial", url: "https://www.youtube.com/watch?v=c-g6epk3fFE", type: "video" },
+    ],
+  },
+  {
+    name: "Anthropic Claude API",
+    category: "AI Engineering",
+    resources: [
+      { name: "Claude API Documentation", url: "https://docs.anthropic.com/en/api/getting-started", type: "docs" },
+      { name: "Claude API Guide", url: "https://www.youtube.com/watch?v=Tl-63xNj2RQ", type: "video" },
+    ],
+  },
+  {
+    name: "Vertex AI",
+    category: "AI Engineering",
+    resources: [
+      { name: "Vertex AI Documentation", url: "https://cloud.google.com/vertex-ai/docs", type: "docs" },
+      { name: "Vertex AI Tutorial", url: "https://www.youtube.com/watch?v=gT4qqHMiEpA", type: "video" },
+    ],
+  },
+  {
+    name: "Amazon Bedrock",
+    category: "AI Engineering",
+    resources: [
+      { name: "Amazon Bedrock Documentation", url: "https://docs.aws.amazon.com/bedrock/", type: "docs" },
+      { name: "Amazon Bedrock Tutorial", url: "https://www.youtube.com/watch?v=ab1mbj0acDo", type: "video" },
+    ],
+  },
+  {
+    name: "Prompt Engineering",
+    category: "AI Engineering",
+    resources: [
+      { name: "Prompt Engineering Guide", url: "https://www.promptingguide.ai/", type: "docs" },
+      { name: "ChatGPT Prompt Engineering for Developers", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/", type: "course" },
+    ],
+  },
+  {
+    name: "RAG (Retrieval Augmented Generation)",
+    category: "AI Engineering",
+    resources: [
+      { name: "RAG Tutorial", url: "https://www.pinecone.io/learn/retrieval-augmented-generation/", type: "tutorial" },
+      { name: "Advanced RAG Techniques", url: "https://www.youtube.com/watch?v=u5Vcrwpzoz8", type: "video" },
+    ],
+  },
+  {
+    name: "Fine-tuning & PEFT",
+    category: "AI Engineering",
+    resources: [
+      { name: "PEFT Documentation", url: "https://huggingface.co/docs/peft/", type: "docs" },
+      { name: "Fine-tuning LLMs Tutorial", url: "https://www.youtube.com/watch?v=eC6Hd1hFvos", type: "video" },
+    ],
+  },
+  {
+    name: "Gradio",
+    category: "AI Engineering",
+    resources: [
+      { name: "Gradio Documentation", url: "https://www.gradio.app/docs/", type: "docs" },
+      { name: "Gradio App Development Tutorial", url: "https://www.youtube.com/watch?v=RiCQzBluTxU", type: "video" },
+    ],
+  },
+  {
+    name: "Streamlit",
+    category: "AI Engineering",
+    resources: [
+      { name: "Streamlit Documentation", url: "https://docs.streamlit.io/", type: "docs" },
+      { name: "Streamlit for ML Apps", url: "https://www.youtube.com/watch?v=VqgUkExPvLY", type: "video" },
+    ],
+  },
+
   // Data Science
   {
     name: "Pandas",
