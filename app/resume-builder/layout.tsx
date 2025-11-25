@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import type { ReactNode } from "react"
 
 export const metadata: Metadata = {
-  title: "AI Resume Builder | TechCareers",
-  description: "Tailor your resume to the job description with ATS-ready outputs.",
+  title: "Career Builder | TechCareers",
+  description: "AI-powered tools to help you land your dream tech job. Resume builder, cover letter generator, ATS checker, and skills gap analyzer.",
 }
 
 export default function ResumeBuilderLayout({ children }: { children: ReactNode }) {

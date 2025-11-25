@@ -130,7 +130,7 @@ async function fetchJobsForType({
   numPages: number
 }): Promise<Job[]> {
   const termMap: Record<string, string> = {
-    "Fall 2025 Internship": "fall 2025 internship",
+    "Winter 2025 Internship": "winter 2025 internship",
     "Spring 2026 Internship": "spring 2026 internship",
     "Summer 2026 Internship": "summer 2026 internship",
     "Entry-Level / New-Grad Full-Time": "entry level new grad",
