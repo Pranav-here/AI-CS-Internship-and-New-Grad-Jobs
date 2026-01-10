@@ -169,9 +169,12 @@ export async function POST(request: NextRequest) {
   const anthropic = new Anthropic({ apiKey: anthropicApiKey })
 
   try {
-    const systemPrompt = `You are an expert career coach and professional cover letter writer. Your task is to create compelling, ATS-friendly cover letters that help candidates stand out.
+    const systemPrompt = `You are an expert career coach and professional cover letter writer. Create compelling, ATS-friendly letters that stay 100% grounded in the resume.
 
-CRITICAL: You MUST strictly follow the tone and style guidelines provided below. The differences between styles should be clearly noticeable.
+Hallucination guard:
+- Use ONLY companies, titles, dates, locations, education, authorization, and skills that exist in the provided resume.
+- Do NOT invent certifications, employers, or achievements.
+- If the job description lists a skill that is not present in the resume, do not claim the candidate has it; instead, show interest in learning it.
 
 General Guidelines:
 - Write a 3-4 paragraph cover letter (approximately 250-350 words)
