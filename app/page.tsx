@@ -60,64 +60,53 @@ interface SearchFilters {
 
 // All the mandatory quick search presets
 const quickSearchPresets = [
-  // Data Science
-  { label: "DS Intern (Winter 2025)", keyword: "data science", type: "Winter 2025 Internship" },
-  { label: "Junior Data Scientist", keyword: "data scientist", type: "Entry-Level / New-Grad Full-Time" },
-  { label: "Data Analyst Intern", keyword: "data analyst intern", type: "Summer 2026 Internship" },
-  { label: "Data Science Apprentice", keyword: "data science apprentice", type: "Entry-Level / New-Grad Full-Time" },
+  // Data Science & Analytics
+  { label: "Data Analyst", keyword: "data analyst OR analytics analyst OR reporting analyst", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Business Analyst", keyword: "business analyst OR product analyst OR strategy analyst", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Data Scientist", keyword: "data scientist OR applied scientist OR decision scientist", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Analytics Engineer", keyword: "analytics engineer OR bi engineer OR dbt", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Product Analyst", keyword: "product analyst OR growth analyst", type: "Entry-Level / New-Grad Full-Time" },
 
   // Machine Learning
-  { label: "ML Engineer Intern", keyword: "machine learning intern", type: "Winter 2025 Internship" },
-  { label: "ML Engineer Entry", keyword: "machine learning engineer", type: "Entry-Level / New-Grad Full-Time" },
-  { label: "ML Research Intern", keyword: "machine learning research intern", type: "Spring 2026 Internship" },
-  { label: "MLOps Intern", keyword: "mlops intern", type: "Spring 2026 Internship" },
+  { label: "Machine Learning Engineer", keyword: "machine learning engineer OR ml engineer OR applied ml engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Applied Scientist", keyword: "applied scientist OR applied research scientist", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "MLOps Engineer", keyword: "mlops engineer OR ml platform engineer OR model ops", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Data Science Intern", keyword: "data science intern OR analytics intern", type: "Summer 2026 Internship" },
+  { label: "ML Engineer Intern", keyword: "machine learning intern OR applied ml intern", type: "Summer 2026 Internship" },
+
+  // AI Engineering
+  { label: "AI Engineer", keyword: "ai engineer OR ai/ml engineer OR generative ai engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "AI Developer", keyword: "ai developer OR ai application developer OR llm developer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Generative AI Engineer", keyword: "generative ai engineer OR genai engineer OR llm engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "LLM Engineer", keyword: "llm engineer OR llm developer OR prompt engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "AI Solutions Engineer", keyword: "ai solutions engineer OR solutions engineer OR ai solutions", type: "Entry-Level / New-Grad Full-Time" },
 
   // Software Engineering
-  { label: "Entry Software Engineer", keyword: "software engineer", type: "Entry-Level / New-Grad Full-Time" },
-  { label: "Frontend Intern", keyword: "frontend developer intern", type: "Summer 2026 Internship" },
-  { label: "Backend Engineer", keyword: "backend engineer", type: "Entry-Level / New-Grad Full-Time" },
-  { label: "Full-Stack Entry", keyword: "full stack developer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Software Engineer Intern", keyword: "software engineer intern OR software developer intern", type: "Summer 2026 Internship" },
+  { label: "Software Engineer New Grad", keyword: "software engineer new grad OR new grad swe OR entry swe", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Backend Engineer", keyword: "backend engineer OR backend developer OR api engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Frontend Engineer", keyword: "frontend engineer OR frontend developer OR ui engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Full Stack Engineer", keyword: "full stack engineer OR full stack developer", type: "Entry-Level / New-Grad Full-Time" },
 
-  // AI & Advanced ML
-  { label: "AI Research Intern", keyword: "artificial intelligence intern", type: "Winter 2025 Internship" },
-  { label: "NLP Engineer Intern", keyword: "natural language processing intern", type: "Summer 2026 Internship" },
-  { label: "AI Researcher", keyword: "AI researcher", type: "Entry-Level / New-Grad Full-Time" },
-  { label: "GenAI Intern (Winter 2025)", keyword: "generative ai intern", type: "Winter 2025 Internship" },
-  { label: "LLM Engineer Entry", keyword: "large language model engineer", type: "Entry-Level / New-Grad Full-Time" },
-  {
-    label: "RAG Engineer (Entry)",
-    keyword: "retrieval augmented generation engineer",
-    type: "Entry-Level / New-Grad Full-Time",
-  },
-  { label: "Computer-Vision Intern", keyword: "computer vision intern", type: "Summer 2026 Internship" },
-  { label: "AI Product Analyst", keyword: "ai product analyst", type: "Entry-Level / New-Grad Full-Time" },
+  // NLP / Vision
+  { label: "NLP Engineer", keyword: "nlp engineer OR language engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Computer Vision Engineer", keyword: "computer vision engineer OR cv engineer OR vision engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Research Engineer", keyword: "research engineer OR ml research engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Research Intern (ML/AI)", keyword: "research intern OR ai research intern", type: "Summer 2026 Internship" },
 
-  // Business Intelligence & Data Engineering
-  { label: "BI Intern", keyword: "business intelligence intern", type: "Winter 2025 Internship" },
-  { label: "Data Engineer Entry", keyword: "data engineer", type: "Entry-Level / New-Grad Full-Time" },
+  // Data Engineering & BI
+  { label: "Data Engineer", keyword: "data engineer OR etl engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "BI Analyst", keyword: "bi analyst OR business intelligence analyst", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "BI Engineer", keyword: "bi engineer OR analytics engineer", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Data Platform Engineer", keyword: "data platform engineer OR data infrastructure", type: "Entry-Level / New-Grad Full-Time" },
+  { label: "Data Engineering Intern", keyword: "data engineering intern OR data engineer intern", type: "Summer 2026 Internship" },
 
   // Remote Opportunities
-  { label: " Remote SWE Intern", keyword: "software engineer", type: "Spring 2026 Internship", remote: true },
-  { label: " Remote Data Science", keyword: "data science", type: "Entry-Level / New-Grad Full-Time", remote: true },
-  {
-    label: " Remote ML Engineer",
-    keyword: "machine learning",
-    type: "Entry-Level / New-Grad Full-Time",
-    remote: true,
-  },
-  {
-    label: " Remote Python Dev",
-    keyword: "python developer",
-    type: "Entry-Level / New-Grad Full-Time",
-    remote: true,
-  },
-  { label: " Remote DevOps", keyword: "devops engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
-  {
-    label: "ML Research Assistant (Remote)",
-    keyword: "machine learning research assistant",
-    type: "Entry-Level / New-Grad Full-Time",
-    remote: true,
-  },
+  { label: "Remote Software Engineer Intern", keyword: "remote software engineer intern", type: "Summer 2026 Internship", remote: true },
+  { label: "Remote Data Analyst", keyword: "remote data analyst", type: "Entry-Level / New-Grad Full-Time", remote: true },
+  { label: "Remote Data Scientist", keyword: "remote data scientist", type: "Entry-Level / New-Grad Full-Time", remote: true },
+  { label: "Remote ML Engineer", keyword: "remote machine learning engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
+  { label: "Remote Data Engineer", keyword: "remote data engineer", type: "Entry-Level / New-Grad Full-Time", remote: true },
 ]
 
 export default function JobFinderApp() {
@@ -136,7 +125,7 @@ export default function JobFinderApp() {
   const [filters, setFilters] = useState<SearchFilters>({
     keyword: "",
     location: "",
-    jobTypes: ["Winter 2025 Internship", "Spring 2026 Internship", "Summer 2026 Internship", "Entry-Level / New-Grad Full-Time"],
+    jobTypes: ["Spring 2026 Internship", "Fall 2026 Internship", "Summer 2026 Internship", "Entry-Level / New-Grad Full-Time"],
     locationMode: "Include Remote",
     maxResults: 25,
     sortBy: "Relevance",
@@ -502,7 +491,7 @@ export default function JobFinderApp() {
                   "
                 >
                   <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Live Listings</span>
+                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Latest listings</span>
                 </div>
 
                 <div
@@ -520,7 +509,7 @@ export default function JobFinderApp() {
                   "
                 >
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Smart Matching</span>
+                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Smart Jobs</span>
                 </div>
 
                 <div
@@ -538,7 +527,7 @@ export default function JobFinderApp() {
                   "
                 >
                   <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
-                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Global Jobs</span>
+                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Remote + Onsite roles</span>
                 </div>
               </div>
             </div>
@@ -562,7 +551,7 @@ export default function JobFinderApp() {
                   </div>
                   <div>
                     <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Quick Search</h3>
-                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Popular roles, one tap away</p>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Popular roles, ready to search</p>
                   </div>
                 </div>
                 <ChevronDown
@@ -581,7 +570,7 @@ export default function JobFinderApp() {
                       Data Science & Analytics
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                      {quickSearchPresets.slice(0, 4).map((preset, index) => (
+                      {quickSearchPresets.slice(0, 5).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
@@ -602,12 +591,33 @@ export default function JobFinderApp() {
                       Machine Learning
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                      {quickSearchPresets.slice(4, 8).map((preset, index) => (
+                      {quickSearchPresets.slice(5, 10).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-blue-50/50 hover:bg-blue-100 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 border-blue-200/50 dark:border-blue-700/50 text-blue-700 dark:text-blue-300"
+                          onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                        >
+                          {preset.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* AI Engineering */}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3 flex items-center">
+                      <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+                      AI Engineering
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                      {quickSearchPresets.slice(10, 15).map((preset, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="justify-start text-xs h-9 sm:h-8 bg-indigo-50/50 hover:bg-indigo-100 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 border-indigo-200/50 dark:border-indigo-700/50 text-indigo-700 dark:text-indigo-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
                         >
                           {preset.label}
@@ -623,7 +633,7 @@ export default function JobFinderApp() {
                       Software Engineering
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                      {quickSearchPresets.slice(8, 12).map((preset, index) => (
+                      {quickSearchPresets.slice(15, 20).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
@@ -637,19 +647,19 @@ export default function JobFinderApp() {
                     </div>
                   </div>
 
-                  {/* AI & Advanced ML */}
+                  {/* NLP / Vision */}
                   <div>
                     <h4 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3 flex items-center">
-                      <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
-                      AI & Advanced ML
+                      <span className="w-2 h-2 bg-pink-500 rounded-full mr-2"></span>
+                      NLP / Vision
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                      {quickSearchPresets.slice(12, 20).map((preset, index) => (
+                      {quickSearchPresets.slice(20, 24).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           size="sm"
-                          className="justify-start text-xs h-9 sm:h-8 bg-indigo-50/50 hover:bg-indigo-100 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 border-indigo-200/50 dark:border-indigo-700/50 text-indigo-700 dark:text-indigo-300"
+                          className="justify-start text-xs h-9 sm:h-8 bg-pink-50/50 hover:bg-pink-100 dark:bg-pink-900/10 dark:hover:bg-pink-900/20 border-pink-200/50 dark:border-pink-700/50 text-pink-700 dark:text-pink-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
                         >
                           {preset.label}
@@ -658,14 +668,14 @@ export default function JobFinderApp() {
                     </div>
                   </div>
 
-                  {/* Business Intelligence & Data Engineering */}
+                  {/* Data Engineering & BI */}
                   <div>
                     <h4 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3 flex items-center">
                       <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                      Business Intelligence & Data Engineering
+                      Data Engineering & BI
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                      {quickSearchPresets.slice(20, 22).map((preset, index) => (
+                      {quickSearchPresets.slice(24, 29).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
@@ -686,7 +696,7 @@ export default function JobFinderApp() {
                       Remote Opportunities
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                      {quickSearchPresets.slice(22).map((preset, index) => (
+                      {quickSearchPresets.slice(29).map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
@@ -861,8 +871,8 @@ export default function JobFinderApp() {
                     </Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       {[
-                        "Winter 2025 Internship",
                         "Spring 2026 Internship",
+                        "Fall 2026 Internship",
                         "Summer 2026 Internship",
                         "Entry-Level / New-Grad Full-Time",
                       ].map((type) => (
