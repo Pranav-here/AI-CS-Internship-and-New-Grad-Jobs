@@ -1,10 +1,11 @@
 "use client"
 
-import { ArrowLeft, Download, FileText, Loader2, Sparkles, FileCode } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
+import { AlertCircle, Download, FileCode, FileText, Loader2, ShieldCheck, Sparkles, TrendingUp, X } from "lucide-react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
@@ -32,10 +33,55 @@ const OUTPUT_FORMAT_OPTIONS: { value: OutputFormat; label: string; helper: strin
   { value: "latex", label: "LaTeX (.tex)", helper: "Compilable LaTeX source if you maintain your own template." },
 ]
 
+type ResumeMode = "lean_ats" | "story"
+type MetricStrictness = "strict" | "lenient"
+
+const MODE_OPTIONS: { value: ResumeMode; label: string; helper: string }[] = [
+  { value: "lean_ats", label: "Lean ATS", helper: "Maximum keyword density, concise bullets." },
+  { value: "story", label: "Story", helper: "Slightly more narrative while staying ATS-safe." },
+]
+
+const METRIC_OPTIONS: { value: MetricStrictness; label: string; helper: string }[] = [
+  { value: "strict", label: "Strict metrics", helper: "Every bullet must show a number or clear scope." },
+  { value: "lenient", label: "Metric-friendly", helper: "Prefer numbers but keep flow natural." },
+]
+
 type DownloadFile = {
   base64: string
   mimeType: string
   fileName: string
+}
+
+type AtsScore = {
+  overallScore: number
+  technicalSkillsScore: number
+  jobTitleScore: number
+  experienceRelevanceScore: number
+  educationScore: number
+  industryKeywordsScore: number
+  locationScore: number
+  formattingScore: number
+  matchedSkills: string[]
+  missingSkills: string[]
+  matchedKeywords: string[]
+  missingKeywords: string[]
+  suggestions: string[]
+  formattingIssues: string[]
+  breakdown: {
+    technicalSkills: number
+    jobTitle: number
+    experience: number
+    education: number
+    industry: number
+    location: number
+    formatting: number
+  }
+}
+
+type JobDigest = {
+  mustHaveSkills: string[]
+  keywords: string[]
+  responsibilities: string[]
 }
 
 const friendlyMessage =
@@ -52,8 +98,22 @@ const base64ToBlob = (base64: string, type: string) => {
 }
 
 export default function ResumeBuilderTab() {
-  const { jobDescription, setJobDescription, expandedResume, setExpandedResume, targetRole, setTargetRole } =
-    useCareerBuilder()
+  const {
+    jobDescription,
+    setJobDescription,
+    expandedResume,
+    setExpandedResume,
+    targetRole,
+    setTargetRole,
+    mode,
+    setMode,
+    metricStrictness,
+    setMetricStrictness,
+    proudestWins,
+    setProudestWins,
+    bannedTopics,
+    setBannedTopics,
+  } = useCareerBuilder()
 
   const [seniority, setSeniority] = useState(EMPTY_OPTION_VALUE)
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("text")
@@ -64,6 +124,16 @@ export default function ResumeBuilderTab() {
   const [downloadFile, setDownloadFile] = useState<DownloadFile | null>(null)
   const [resultFormat, setResultFormat] = useState<OutputFormat>("text")
   const [copied, setCopied] = useState(false)
+  const [atsScore, setAtsScore] = useState<AtsScore | null>(null)
+  const [atsTarget, setAtsTarget] = useState<number | null>(null)
+  const [appliedAtsPatch, setAppliedAtsPatch] = useState(false)
+  const [jobDigest, setJobDigest] = useState<JobDigest | null>(null)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [proudestChips, setProudestChips] = useState<string[]>([])
+  const [bannedChips, setBannedChips] = useState<string[]>([])
+  const [proudestInput, setProudestInput] = useState("")
+  const [bannedInput, setBannedInput] = useState("")
+  const [showAtsDetails, setShowAtsDetails] = useState(false)
 
   const extractPdfText = async (arrayBuffer: ArrayBuffer) => {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf")
@@ -144,6 +214,10 @@ export default function ResumeBuilderTab() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
+    setAtsScore(null)
+    setAtsTarget(null)
+    setAppliedAtsPatch(false)
+    setJobDigest(null)
 
     const trimmedTargetRole = targetRole.trim()
     const seniorityValue = seniority === EMPTY_OPTION_VALUE ? undefined : seniority
@@ -181,6 +255,10 @@ export default function ResumeBuilderTab() {
           targetRole: trimmedTargetRole || undefined,
           seniority: seniorityValue,
           outputFormat: outputFormat,
+          mode,
+          metricStrictness,
+          proudestWins: proudestWins || undefined,
+          bannedTopics: bannedTopics || undefined,
         }),
       })
 
@@ -202,6 +280,17 @@ export default function ResumeBuilderTab() {
       if (!downloadBase64 || !downloadFileName || !downloadMimeType) {
         throw new Error("We could not prepare the download. Please try again.")
       }
+
+      if (data.atsScore) {
+        setAtsScore(data.atsScore as AtsScore)
+      }
+      if (data.atsTarget) {
+        setAtsTarget(data.atsTarget as number)
+      }
+      if (data.jobDigest) {
+        setJobDigest(data.jobDigest as JobDigest)
+      }
+      setAppliedAtsPatch(Boolean(data.appliedAtsPatch))
 
       setPreviewText(preview)
       setDownloadFile({
@@ -239,6 +328,66 @@ export default function ResumeBuilderTab() {
       setError("Unable to copy to clipboard. Please copy manually.")
     }
   }
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-600 dark:text-green-400"
+    if (score >= 60) return "text-yellow-600 dark:text-yellow-400"
+    return "text-red-600 dark:text-red-400"
+  }
+
+  const getScoreBgColor = (score: number) => {
+    if (score >= 80) return "bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/40"
+    if (score >= 60) return "bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-900/40"
+    return "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/40"
+  }
+
+  const addChip = (value: string, setter: (chips: string[]) => void, chips: string[], contextSetter: (value: string) => void) => {
+    const trimmed = value.trim()
+    if (!trimmed) return
+    if (chips.includes(trimmed)) return
+    const next = [...chips, trimmed]
+    setter(next)
+    contextSetter(next.join("; "))
+  }
+
+  const removeChip = (value: string, setter: (chips: string[]) => void, chips: string[], contextSetter: (value: string) => void) => {
+    const next = chips.filter((chip) => chip !== value)
+    setter(next)
+    contextSetter(next.join("; "))
+  }
+
+  const handleChipKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    currentValue: string,
+    setValue: (value: string) => void,
+    chips: string[],
+    setter: (chips: string[]) => void,
+    contextSetter: (value: string) => void
+  ) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault()
+      addChip(currentValue, setter, chips, contextSetter)
+      setValue("")
+    }
+  }
+
+  const parseToChips = (value: string) =>
+    Array.from(
+      new Set(
+        value
+          .split(/[\n;,]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    )
+
+  useEffect(() => {
+    setProudestChips(parseToChips(proudestWins))
+  }, [proudestWins])
+
+  useEffect(() => {
+    setBannedChips(parseToChips(bannedTopics))
+  }, [bannedTopics])
 
   return (
     <div className="space-y-8">
@@ -295,6 +444,145 @@ export default function ResumeBuilderTab() {
           </p>
         </div>
 
+        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen} className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Advanced grounding (optional)</p>
+              <p className="text-xs text-slate-500">Use for more control; still zero hallucinations. Saved choices auto-apply.</p>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="h-9 rounded-xl px-3 text-xs">
+                {advancedOpen ? "Hide" : "Show"} advanced
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <div className="mt-4 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900 dark:text-white">Resume flavor</Label>
+                  <RadioGroup value={mode} onValueChange={(value) => setMode(value as ResumeMode)} className="mt-3">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {MODE_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          htmlFor={`mode-${option.value}`}
+                          className={`group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
+                            mode === option.value
+                              ? "border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40"
+                              : "border-slate-200 bg-white/60 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={option.value} id={`mode-${option.value}`} />
+                            <span className="font-semibold">{option.label}</span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{option.helper}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900 dark:text-white">Metrics policy</Label>
+                  <RadioGroup
+                    value={metricStrictness}
+                    onValueChange={(value) => setMetricStrictness(value as MetricStrictness)}
+                    className="mt-3"
+                  >
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {METRIC_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          htmlFor={`metrics-${option.value}`}
+                          className={`group flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
+                            metricStrictness === option.value
+                              ? "border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/40"
+                              : "border-slate-200 bg-white/60 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/30 dark:hover:border-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value={option.value} id={`metrics-${option.value}`} />
+                            <span className="font-semibold">{option.label}</span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{option.helper}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900 dark:text-white">Proudest wins (chips)</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {proudestChips.map((chip) => (
+                      <span
+                        key={chip}
+                        className="inline-flex items-center gap-1 rounded-full bg-indigo-600/10 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200"
+                      >
+                        {chip}
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() => removeChip(chip, setProudestChips, proudestChips, setProudestWins)}
+                          className="text-indigo-700 hover:text-indigo-900 dark:text-indigo-200 dark:hover:text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <Input
+                    value={proudestInput}
+                    onChange={(e) => setProudestInput(e.target.value)}
+                    onKeyDown={(event) =>
+                      handleChipKeyDown(event, proudestInput, setProudestInput, proudestChips, setProudestChips, setProudestWins)
+                    }
+                    placeholder="Type a win and press Enter"
+                    className="mt-2"
+                  />
+                  <p className="mt-1 text-[11px] text-slate-500">Grounding only; never invented.</p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900 dark:text-white">Banned topics/skills</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {bannedChips.map((chip) => (
+                      <span
+                        key={chip}
+                        className="inline-flex items-center gap-1 rounded-full bg-slate-700/10 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700/40 dark:text-slate-100"
+                      >
+                        {chip}
+                        <button
+                          type="button"
+                          aria-label="Remove"
+                          onClick={() => removeChip(chip, setBannedChips, bannedChips, setBannedTopics)}
+                          className="text-slate-600 hover:text-slate-800 dark:text-slate-200 dark:hover:text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <Input
+                    value={bannedInput}
+                    onChange={(e) => setBannedInput(e.target.value)}
+                    onKeyDown={(event) =>
+                      handleChipKeyDown(event, bannedInput, setBannedInput, bannedChips, setBannedChips, setBannedTopics)
+                    }
+                    placeholder="Type a topic and press Enter"
+                    className="mt-2"
+                  />
+                  <p className="mt-1 text-[11px] text-slate-500">These will be excluded from Experience/Skills.</p>
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         <div>
           <Label className="text-base font-semibold text-slate-900 dark:text-white">Output format</Label>
           <RadioGroup value={outputFormat} onValueChange={(value) => setOutputFormat(value as OutputFormat)} className="mt-4">
@@ -331,15 +619,11 @@ export default function ResumeBuilderTab() {
           </RadioGroup>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
-            We run Anthropic for focused tailoring, then OpenAI for grammar polish. We keep only the most relevant,
-            STAR-framed bullets to beat ATS. No data is stored after the request completes.
-          </p>
+        <div className="space-y-2">
           <Button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-300 transition hover:scale-[1.01] hover:shadow-indigo-400 focus-visible:ring-indigo-500 disabled:opacity-70"
+            className="w-full justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-300 transition hover:scale-[1.01] hover:shadow-indigo-400 focus-visible:ring-indigo-500 disabled:opacity-70"
           >
             {loading ? (
               <>
@@ -406,6 +690,106 @@ export default function ResumeBuilderTab() {
           <div className="max-h-[520px] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-6 text-slate-800 shadow-inner dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-100">
             <pre className="whitespace-pre-wrap break-words text-sm leading-relaxed">{previewText}</pre>
           </div>
+
+          {atsScore && (
+            <div className={`rounded-xl border px-4 py-3 ${getScoreBgColor(atsScore.overallScore)}`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  ATS score {atsTarget ? `(goal ${atsTarget}+ )` : ""}
+                  {appliedAtsPatch && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-600/10 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                      <ShieldCheck className="h-3 w-3" />
+                      Auto-patched
+                    </span>
+                  )}
+                </div>
+                <div className={`text-3xl font-bold ${getScoreColor(atsScore.overallScore)}`}>
+                  {atsScore.overallScore}
+                  <span className="text-base text-slate-500 dark:text-slate-400">/100</span>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
+                <span>Missing skills: {atsScore.missingSkills.slice(0, 4).join(", ") || "None"}</span>
+                <span>- Missing keywords: {atsScore.missingKeywords.slice(0, 3).join(", ") || "None"}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setShowAtsDetails((prev) => !prev)}
+                >
+                  {showAtsDetails ? "Hide" : "View"} ATS breakdown
+                </Button>
+              </div>
+              {showAtsDetails && (
+                <div className="mt-3 grid gap-3 text-xs text-slate-700 dark:text-slate-200 sm:grid-cols-3">
+                  <div>
+                    <p className="font-semibold">Technical skills (35%)</p>
+                    <p>{atsScore.technicalSkillsScore}/35</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Title match (15%)</p>
+                    <p>{atsScore.jobTitleScore}/15</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Experience (15%)</p>
+                    <p>{atsScore.experienceRelevanceScore}/15</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Education (10%)</p>
+                    <p>{atsScore.educationScore}/10</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Location (10%)</p>
+                    <p>{atsScore.locationScore}/10</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Formatting (10%)</p>
+                    <p>{atsScore.formattingScore}/10</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Industry (5%)</p>
+                    <p>{atsScore.industryKeywordsScore}/5</p>
+                  </div>
+                  {atsScore.suggestions?.length > 0 && (
+                    <div className="sm:col-span-3">
+                      <p className="font-semibold">Suggestions</p>
+                      <p>{atsScore.suggestions.slice(0, 2).join(" | ")}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {jobDigest && (
+            <div className="rounded-2xl border border-slate-200 bg-white/60 p-4 text-xs text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                JD tokens we targeted
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(jobDigest.mustHaveSkills || []).slice(0, 8).map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-indigo-600/10 px-3 py-1 text-[11px] font-medium text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200"
+                  >
+                    {item}
+                  </span>
+                ))}
+                {(jobDigest.keywords || []).slice(0, 6).map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-slate-700/10 px-3 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-700/40 dark:text-slate-100"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>
