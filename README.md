@@ -1,67 +1,67 @@
 # AI/CS Entry-Level & Internship Finder
 
-**[Live Application →](https://techcareers.vercel.app/)**
+**Live app:** [TechCareers](https://techcareers.vercel.app/) - Production-ready Next.js 14 + Vercel Edge
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## Overview
+## Product Overview
 
-A production web application designed to streamline the job search process for students and new graduates pursuing careers in AI, Machine Learning, Data Science, and Software Engineering. The platform aggregates real-time job listings and provides AI-powered career tools to help candidates find, organize, and apply to opportunities that match their skills and career goals. From tailored resume generation to ATS optimization, cover letter writing, and skills gap analysis—everything you need to land your dream tech role.
+TechCareers is an AI-powered job search and application workspace built for early-career talent in AI, machine learning, data, and software engineering. It aggregates live postings, auto-tags them, and gives you AI tools to tailor every application with ATS confidence.
 
-## What It Does
+## Why It Wins
 
-**AI/CS Entry-Level & Internship Finder** combines job search, application management, and AI-powered career tools into a single platform:
+- Real-time, deduped roles from major job boards and company career pages via JSearch
+- AI workspace to tailor resumes and cover letters with ATS-readiness baked in
+- Pipeline tools to save, digest, analyze, and export applications
+- Polished, responsive UI built with shadcn/ui and Tailwind CSS
 
-### Job Discovery & Search
-- **Real-time listings** from major job boards and company career pages, updated continuously through the JSearch API
-- **Smart filtering** by job type (internship, entry-level, full-time), location mode (remote, hybrid, on-site), and experience level
-- **Quick search** with pre-configured buttons for high-demand categories like Data Science, Machine Learning Engineering, and Software Development
-- **Intelligent tagging** that automatically categorizes positions by technology stack and domain expertise
+## Capabilities
 
-### Application Management
-- **Saved jobs** feature to bookmark promising opportunities and build a personal pipeline
-- **Email digest** capability that delivers curated job matches directly to your inbox
-- **Analytics dashboard** visualizing market trends, application statistics, and search insights
-- **Export functionality** to download saved jobs in CSV format for external tracking
+### Job Intelligence
+- Real-time listings refreshed continuously from major job boards and company career pages
+- Smart filters by role type (internship, entry-level, full-time), experience level, and remote/on-site/hybrid
+- Quick searches for high-demand paths like Data Science, Machine Learning Engineering, and Software Development
+- Automatic tagging by tech stack and domain for faster triage
 
-### AI Resume Builder
-The platform's standout feature is an AI-powered resume tailoring system:
-- Analyzes job descriptions and your master resume to identify key requirements and relevant experience
-- Generates a professionally formatted, ATS-optimized 2-page resume tailored to each specific role
-- Leverages **Anthropic Claude** for intelligent content generation and **OpenAI GPT** for proofreading and refinement
-- Outputs downloadable `.docx` Word documents ready for immediate submission
-- Includes live preview for final customization before download
+### Application Workspace
+- Save and organize roles to build a personal pipeline
+- Email digests delivering curated matches directly to your inbox
+- Analytics dashboard visualizing market trends and application stats
+- Export saved jobs to CSV for external tracking
+
+### AI Resume Tailor
+- Compares job descriptions with your master resume to surface the most relevant experience
+- Generates a professionally formatted, ATS-optimized 2-page resume for each role
+- Powered by Anthropic Claude for drafting and OpenAI GPT for refinement
+- Downloadable `.docx` with live preview for last-mile edits
 
 ### ATS Score Checker
-Research-backed resume analysis tool that predicts how well your resume will perform with Applicant Tracking Systems:
-- **7-factor scoring model** based on real ATS systems (RChilli, Workday, Oracle Taleo) and recruiter behavior data
-- **Weighted analysis** with Technical Skills (35%), Job Title Match (15%), Experience Relevance (15%), Education (10%), Location (10%), Formatting (10%), and Industry Keywords (5%)
-- **Detailed breakdown** showing matched vs. missing skills and keywords
-- **Actionable suggestions** for improving your resume's ATS compatibility
-- Helps optimize your resume before submission to increase interview callback rates
+- 7-factor scoring model informed by real ATS systems (RChilli, Workday, Oracle Taleo) and recruiter signals
+- Weighted analysis: Technical Skills (35%), Job Title Match (15%), Experience Relevance (15%), Education (10%), Location (10%), Formatting (10%), Industry Keywords (5%)
+- Clear matched vs. missing keywords with actionable recommendations
 
 ### Cover Letter Generator
-AI-powered tool that creates personalized, professional cover letters:
-- Analyzes your resume and the target job description to craft relevant content
-- **Three writing styles**: Formal (traditional business), Professional (balanced), or Enthusiastic (energetic and passionate)
-- Automatically incorporates your relevant experience and achievements
-- Customizes tone and content to match the company culture and role requirements
-- Generates compelling narratives that connect your background to the position
+- Personalized cover letters aligned to the target role and company
+- Three tones: Formal (traditional business), Professional (balanced), or Enthusiastic (energetic and passionate)
+- Automatically incorporates your experience and adapts to company culture
 
-### Skills Gap Analysis
-Intelligent career development tool that identifies areas for growth:
-- Compares your current skills against job requirements and industry standards
-- **Prioritized recommendations** categorized as Critical, Important, or Nice-to-Have
-- **Curated learning resources** including courses, documentation, and tutorials for each missing skill
-- Helps you create a focused learning roadmap aligned with your target roles
-- Powered by a comprehensive skills database covering programming languages, frameworks, tools, and methodologies
+### Skills Gap Navigator
+- Compares your skills against role requirements and industry benchmarks
+- Prioritized recommendations categorized as Critical, Important, or Nice-to-Have
+- Curated learning resources for each missing skill to build a focused roadmap
 
-### User Experience
-- **Responsive design** optimized for desktop, tablet, and mobile devices
-- **Dark/light mode** with persistent theme preferences
-- **Modern UI** built with shadcn/ui components and Tailwind CSS for a polished, professional interface
+### Experience
+- Responsive design optimized for desktop, tablet, and mobile
+- Dark/light mode with persistent theme preferences
+- Modern UI built with shadcn/ui components and Tailwind CSS
+
+## How It Works
+
+- Search and filter live roles with smart presets
+- Tailor your resume and cover letter with AI, then validate ATS readiness
+- Save, export, and digest your pipeline with CSV exports and email summaries
 
 ## Technology Stack
 
@@ -77,15 +77,12 @@ Intelligent career development tool that identifies areas for growth:
 
 **Deployment:** Vercel Edge Network
 
-## Use Cases
+## Ideal Users
 
-- **Students** searching for summer internships or co-op positions in tech
-- **New graduates** entering the job market in AI/ML or software engineering roles
-- **Career changers** transitioning into tech from adjacent fields
-- **Job seekers** who need to tailor resumes and cover letters quickly for multiple applications
-- **Candidates** preparing applications and want to optimize for ATS systems
-- **Developers** looking to identify skill gaps and create targeted learning plans
-- **Anyone** looking to streamline their tech job search with intelligent automation
+- Students searching for internships or co-op positions in tech
+- New graduates entering the job market in AI/ML or software engineering
+- Career changers transitioning into tech from adjacent fields
+- Teams tailoring applications at scale and optimizing for ATS systems
 
 ## License
 
@@ -93,4 +90,4 @@ MIT License - This is open-source software free to use, modify, and distribute.
 
 ## Acknowledgments
 
-Built with [Next.js](https://nextjs.org/) · UI by [shadcn/ui](https://ui.shadcn.com/) · Job data from [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) · AI by [Anthropic](https://anthropic.com/) & [OpenAI](https://openai.com/)
+Built with [Next.js](https://nextjs.org/). UI by [shadcn/ui](https://ui.shadcn.com/). Job data from [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch). AI by [Anthropic](https://anthropic.com/) and [OpenAI](https://openai.com/).
