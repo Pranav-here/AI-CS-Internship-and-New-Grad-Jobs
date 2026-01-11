@@ -491,7 +491,7 @@ export default function JobFinderApp() {
                   "
                 >
                   <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Latest listings</span>
+                  <span className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-semibold">Latest Listings</span>
                 </div>
 
                 <div
