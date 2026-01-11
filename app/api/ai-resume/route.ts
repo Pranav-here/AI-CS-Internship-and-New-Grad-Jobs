@@ -332,23 +332,41 @@ If a field is missing in the resume, omit it. Do NOT invent or guess.
 Resume text:
 ${resumeText}`
 
-  const response = await anthropicClient.messages.create({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 1200,
-    temperature: 0,
-    system:
-      "You are a strict fact extractor. You only return structured JSON from the provided resume text. Never add information that is not explicitly present.",
-    messages: [
-      {
-        role: "user",
-        content: [{ type: "text", text: prompt }],
-      },
-    ],
-  })
+  let lastError: unknown
 
-  const text = response.content.map((block) => (block.type === "text" ? block.text : "")).join("\n")
-  const parsed = parseJsonFromText(text) ?? {}
-  return parsed as ResumeFacts
+  for (const model of ANTHROPIC_MODEL_CANDIDATES) {
+    try {
+      const response = await anthropicClient.messages.create({
+        model,
+        max_tokens: 1200,
+        temperature: 0,
+        system:
+          "You are a strict fact extractor. You only return structured JSON from the provided resume text. Never add information that is not explicitly present.",
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: prompt }],
+          },
+        ],
+      })
+
+      const text = response.content.map((block) => (block.type === "text" ? block.text : "")).join("\n")
+      const parsed = parseJsonFromText(text) ?? {}
+      return parsed as ResumeFacts
+    } catch (error: any) {
+      const errorType = error?.error?.error?.type ?? error?.error?.type
+      console.error(`Anthropic model ${model} failed for resume facts:`, error)
+
+      if (errorType === "not_found_error") {
+        lastError = error
+        continue
+      }
+
+      throw error
+    }
+  }
+
+  throw lastError ?? new Error("All Anthropic model attempts failed for resume facts.")
 }
 
 const getJobDigest = async ({
@@ -369,26 +387,44 @@ const getJobDigest = async ({
 Include target role/seniority if provided: ${targetRole ?? "n/a"} ${seniority ?? ""}.
 Return JSON only. Do not add anything not in the JD.`
 
-  const response = await anthropicClient.messages.create({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 600,
-    temperature: 0,
-    system: "You extract concise requirement digests from job descriptions. Stay strictly factual and return JSON only.",
-    messages: [
-      {
-        role: "user",
-        content: [{ type: "text", text: `JOB DESCRIPTION:\n${jobDescription}\n\n${prompt}` }],
-      },
-    ],
-  })
+  let lastError: unknown
 
-  const text = response.content.map((block) => (block.type === "text" ? block.text : "")).join("\n")
-  const parsed = parseJsonFromText(text) ?? { mustHaveSkills: [], keywords: [], responsibilities: [] }
-  return {
-    mustHaveSkills: Array.isArray(parsed.mustHaveSkills) ? parsed.mustHaveSkills.slice(0, 10) : [],
-    keywords: Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 10) : [],
-    responsibilities: Array.isArray(parsed.responsibilities) ? parsed.responsibilities.slice(0, 5) : [],
+  for (const model of ANTHROPIC_MODEL_CANDIDATES) {
+    try {
+      const response = await anthropicClient.messages.create({
+        model,
+        max_tokens: 600,
+        temperature: 0,
+        system: "You extract concise requirement digests from job descriptions. Stay strictly factual and return JSON only.",
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "text", text: `JOB DESCRIPTION:\n${jobDescription}\n\n${prompt}` }],
+          },
+        ],
+      })
+
+      const text = response.content.map((block) => (block.type === "text" ? block.text : "")).join("\n")
+      const parsed = parseJsonFromText(text) ?? { mustHaveSkills: [], keywords: [], responsibilities: [] }
+      return {
+        mustHaveSkills: Array.isArray(parsed.mustHaveSkills) ? parsed.mustHaveSkills.slice(0, 10) : [],
+        keywords: Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 10) : [],
+        responsibilities: Array.isArray(parsed.responsibilities) ? parsed.responsibilities.slice(0, 5) : [],
+      }
+    } catch (error: any) {
+      const errorType = error?.error?.error?.type ?? error?.error?.type
+      console.error(`Anthropic model ${model} failed for job digest:`, error)
+
+      if (errorType === "not_found_error") {
+        lastError = error
+        continue
+      }
+
+      throw error
+    }
   }
+
+  throw lastError ?? new Error("All Anthropic model attempts failed for job digest.")
 }
 
 const getAtsScore = async ({
