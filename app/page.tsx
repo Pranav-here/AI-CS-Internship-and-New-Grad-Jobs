@@ -162,6 +162,7 @@ export default function JobFinderApp() {
     isValidating: loading,
   } = useSWR(searchKey, fetcher, { revalidateOnFocus: false, dedupingInterval: 5 * 60 * 1000, keepPreviousData: true })
   const jobs = searchData?.jobs ?? []
+  const friendlyErrorMessage = searchError?.message ?? "We're temporarily rate limited by our job data provider. Please try again soon."
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -1160,7 +1161,22 @@ export default function JobFinderApp() {
               )}
 
             {/* Job Results */}
-              {filteredJobs.length > 0 ? (
+              {searchError ? (
+                <Card className="relative border-0 bg-gradient-to-br from-rose-50 via-amber-50 to-white dark:from-rose-900/30 dark:via-amber-900/20 dark:to-slate-900 backdrop-blur-xl shadow-2xl overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-rose-400/10 via-amber-300/10 to-orange-300/10 dark:from-rose-500/10 dark:via-amber-500/10 dark:to-orange-500/10"></div>
+                  <CardContent className="text-center py-16 sm:py-20 relative z-10">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-rose-100 to-amber-100 dark:from-rose-900/40 dark:to-amber-900/40 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                      <Sparkles className="w-8 h-8 text-rose-600 dark:text-rose-300" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                      Search temporarily paused
+                    </h3>
+                    <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                      {friendlyErrorMessage}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : filteredJobs.length > 0 ? (
                 <div className="space-y-6 sm:space-y-8">
                   {viewMode === "grid" ? (
                     <div
