@@ -34,6 +34,8 @@ const REQUEST_TIMEOUT_MS = 12_000
 type CacheEntry = { timestamp: number; jobs: Job[] }
 const searchCache = new Map<string, CacheEntry>()
 
+type JobFetchError = Error & { status?: number }
+
 export async function POST(request: NextRequest) {
   try {
     const filters: SearchFilters = await request.json()
@@ -71,14 +73,29 @@ export async function POST(request: NextRequest) {
     )
 
     const allJobs: Job[] = []
+    const failures: { status?: number; jobType: string; message: string }[] = []
     const settled = await Promise.allSettled(jobTypePromises)
-    settled.forEach((result) => {
+    settled.forEach((result, index) => {
+      const jobType = filters.jobTypes[index] || "Unknown"
       if (result.status === "fulfilled") {
         allJobs.push(...result.value)
       } else {
-        console.error("JSearch request failed:", result.reason)
+        const status = (result.reason as JobFetchError)?.status
+        const message = (result.reason as Error)?.message || "Unknown error"
+        failures.push({ status, jobType, message })
+        console.error(`JSearch request failed for ${jobType}:`, message)
       }
     })
+
+    // If every upstream call failed, surface a friendly error instead of empty results
+    if (failures.length === filters.jobTypes.length && allJobs.length === 0) {
+      const hasRateLimit = failures.some((failure) => failure.status === 429)
+      const status = hasRateLimit ? 429 : 502
+      const errorMessage = hasRateLimit
+        ? "Thanks for the overwhelming response - we hit our daily job search limit. Please check back soon."
+        : "Job search is temporarily unavailable. Please try again in a few minutes."
+      return NextResponse.json({ error: errorMessage }, { status })
+    }
 
     // Apply location filtering
     let filteredJobs = allJobs
@@ -168,8 +185,9 @@ async function fetchJobsForType({
   }).finally(() => clearTimeout(timeout))
 
   if (!response.ok) {
-    console.error(`JSearch API error for ${jobType}: ${response.status}`)
-    return []
+    const error = new Error(`JSearch API error for ${jobType}: ${response.status}`) as JobFetchError
+    error.status = response.status
+    throw error
   }
 
   const data = await response.json()
