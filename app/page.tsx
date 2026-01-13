@@ -125,7 +125,7 @@ export default function JobFinderApp() {
   const [filters, setFilters] = useState<SearchFilters>({
     keyword: "",
     location: "",
-    jobTypes: ["Spring 2026 Internship", "Fall 2026 Internship", "Summer 2026 Internship", "Entry-Level / New-Grad Full-Time"],
+    jobTypes: ["Entry-Level / New-Grad Full-Time"],
     locationMode: "Include Remote",
     maxResults: 25,
     sortBy: "Relevance",
@@ -135,6 +135,7 @@ export default function JobFinderApp() {
   const lastDigestKey = useRef<string | null>(null)
   const searchSectionRef = useRef<HTMLDivElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const inflightRequests = useRef<Map<string, Promise<any>>>(new Map())
 
   const normalizeRemoteStatus = (status: string) => {
     const normalized = status?.toLowerCase().trim()
@@ -143,26 +144,63 @@ export default function JobFinderApp() {
     return "onsite"
   }
   const fetcher = async (key: string) => {
-    const payload = JSON.parse(key)
-    const response = await fetch("/api/search-jobs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-    if (!response.ok) {
+    const existing = inflightRequests.current.get(key)
+    if (existing) return existing
+
+    const request = (async () => {
+      const payload = JSON.parse(key)
+      const response = await fetch("/api/search-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
       const data = await response.json().catch(() => null)
-      throw new Error(data?.error || "Search failed")
+
+      if (!response.ok) {
+        const error = new Error(data?.error || data?.message || "Search failed") as Error & {
+          code?: string
+          retryAfterSeconds?: number
+        }
+        if (data?.code) error.code = data.code
+        if (data?.retryAfterSeconds) error.retryAfterSeconds = data.retryAfterSeconds
+        throw error
+      }
+
+      return data
+    })()
+
+    inflightRequests.current.set(key, request)
+    try {
+      return await request
+    } finally {
+      inflightRequests.current.delete(key)
     }
-    return response.json()
   }
 
   const {
     data: searchData,
     error: searchError,
     isValidating: loading,
-  } = useSWR(searchKey, fetcher, { revalidateOnFocus: false, dedupingInterval: 5 * 60 * 1000, keepPreviousData: true })
+  } = useSWR(searchKey, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+    dedupingInterval: 5 * 60 * 1000,
+    keepPreviousData: true,
+  })
   const jobs = searchData?.jobs ?? []
-  const friendlyErrorMessage = searchError?.message ?? "We're temporarily rate limited by our job data provider. Please try again soon."
+  const monthlyQuota = (searchError as any)?.code === "MONTHLY_QUOTA_EXCEEDED"
+  const friendlyErrorMessage =
+    (monthlyQuota && "Monthly quota exceeded. Please try again after the billing window resets.") ||
+    searchError?.message ||
+    "We're temporarily rate limited by our job data provider. Please try again soon."
+  const [showCachedResults, setShowCachedResults] = useState(false)
+  const [lastCachedJobs, setLastCachedJobs] = useState<Job[]>([])
+  const [lastJobs, setLastJobs] = useState<Job[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const searchDisabled = monthlyQuota
+  const showingCached = showCachedResults && lastCachedJobs.length > 0
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -188,6 +226,7 @@ export default function JobFinderApp() {
 
   useEffect(() => {
     if (!searchError) return
+    setIsSearching(false)
     toast({
       title: "Search Error",
       description: searchError.message || "Failed to search jobs. Please try again.",
@@ -217,22 +256,27 @@ export default function JobFinderApp() {
     handleSearch(newFilters)
   }
 
-  const handleSearch = (searchFilters = filters) => {
+  const handleSearch = (searchFilters = filters, options?: { skipToast?: boolean }) => {
+    if (monthlyQuota) return
     if (!searchFilters.keyword.trim()) {
-      toast({
-        title: "Search Required",
-        description: "Please enter a job keyword to search.",
-        variant: "destructive",
-      })
+      if (!options?.skipToast) {
+        toast({
+          title: "Search Required",
+          description: "Please enter a job keyword to search.",
+          variant: "destructive",
+        })
+      }
       return
     }
 
     if (searchFilters.jobTypes.length === 0) {
-      toast({
-        title: "Job Type Required",
-        description: "Please select at least one job type.",
-        variant: "destructive",
-      })
+      if (!options?.skipToast) {
+        toast({
+          title: "Job Type Required",
+          description: "Please select at least one job type.",
+          variant: "destructive",
+        })
+      }
       return
     }
 
@@ -242,6 +286,8 @@ export default function JobFinderApp() {
       jobTypes: [...searchFilters.jobTypes],
       maxResults: Math.min(searchFilters.maxResults, 100),
     }
+
+    setIsSearching(true)
 
     setFilters(normalizedFilters)
     setSearchKey(JSON.stringify(normalizedFilters))
@@ -285,8 +331,15 @@ export default function JobFinderApp() {
 
   useEffect(() => {
     if (!searchData) return
+
     const jobCount = searchData.jobs?.length ?? 0
+    setLastJobs(searchData.jobs || [])
+    if (jobCount > 0) {
+      setLastCachedJobs(searchData.jobs)
+      setShowCachedResults(false)
+    }
     setSearchTimestamp(new Date())
+    setIsSearching(false)
     toast({
       title: "Search Complete",
       description: `Found ${jobCount} jobs matching your criteria.`,
@@ -321,7 +374,7 @@ export default function JobFinderApp() {
 
   const getTagStatistics = () => {
     const tagCounts: Record<string, number> = {}
-    jobs.forEach((job) => {
+    baseJobs.forEach((job) => {
       if (job.Tags) {
         const tags = job.Tags.split(",").map((tag) => tag.trim())
         tags.forEach((tag) => {
@@ -334,7 +387,8 @@ export default function JobFinderApp() {
       .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
   }
 
-  const filteredJobs = selectedTag === "All" ? jobs : jobs.filter((job) => job.Tags?.includes(selectedTag))
+  const baseJobs = showingCached ? lastCachedJobs : isSearching && lastJobs.length > 0 ? lastJobs : jobs
+  const filteredJobs = selectedTag === "All" ? baseJobs : baseJobs.filter((job) => job.Tags?.includes(selectedTag))
 
   const isRemoteJob = (job: Job) =>
     job["Remote Job"] === "remote" ||
@@ -538,6 +592,26 @@ export default function JobFinderApp() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-20 sm:pb-24">
+        {monthlyQuota && (
+          <Card className="mb-4 sm:mb-6 border border-amber-200 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-900/30 shadow-lg">
+            <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5">
+              <div>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Search temporarily paused</p>
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  Monthly quota exceeded. Please try again after the billing window resets.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                {lastCachedJobs.length > 0 && (
+                  <Button variant="outline" onClick={() => setShowCachedResults(true)} className="border-amber-400 text-amber-800 dark:text-amber-100">
+                    Show last cached results
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Quick Search Panel */}
         <Card className="mb-6 sm:mb-8 border-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardContent className="p-0">
@@ -578,6 +652,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-emerald-50/50 hover:bg-emerald-100 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20 border-emerald-200/50 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -599,6 +674,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-blue-50/50 hover:bg-blue-100 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 border-blue-200/50 dark:border-blue-700/50 text-blue-700 dark:text-blue-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -620,6 +696,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-indigo-50/50 hover:bg-indigo-100 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 border-indigo-200/50 dark:border-indigo-700/50 text-indigo-700 dark:text-indigo-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -641,6 +718,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-purple-50/50 hover:bg-purple-100 dark:bg-purple-900/10 dark:hover:bg-purple-900/20 border-purple-200/50 dark:border-purple-700/50 text-purple-700 dark:text-purple-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -662,6 +740,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-pink-50/50 hover:bg-pink-100 dark:bg-pink-900/10 dark:hover:bg-pink-900/20 border-pink-200/50 dark:border-pink-700/50 text-pink-700 dark:text-pink-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -683,6 +762,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-orange-50/50 hover:bg-orange-100 dark:bg-orange-900/10 dark:hover:bg-orange-900/20 border-orange-200/50 dark:border-orange-700/50 text-orange-700 dark:text-orange-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -704,6 +784,7 @@ export default function JobFinderApp() {
                           size="sm"
                           className="justify-start text-xs h-9 sm:h-8 bg-green-50/50 hover:bg-green-100 dark:bg-green-900/10 dark:hover:bg-green-900/20 border-green-200/50 dark:border-green-700/50 text-green-700 dark:text-green-300"
                           onClick={() => handleQuickSearch(preset.keyword, preset.type, preset.remote)}
+                          disabled={searchDisabled}
                         >
                           {preset.label}
                         </Button>
@@ -755,6 +836,7 @@ export default function JobFinderApp() {
                       placeholder="e.g., Machine Learning Engineer, Data Scientist"
                       value={filters.keyword}
                       onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
+                      disabled={searchDisabled}
                       className="pl-10 sm:pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-slate-200/50 dark:border-slate-700/50 focus:border-blue-500 dark:focus:border-blue-400 bg-white/80 dark:bg-slate-900/50 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 focus:shadow-lg focus:shadow-blue-500/20 dark:focus:shadow-blue-400/20"
                     />
                   </div>
@@ -774,6 +856,7 @@ export default function JobFinderApp() {
                       placeholder="City, State, or Remote"
                       value={filters.location}
                       onChange={(e) => setFilters((prev) => ({ ...prev, location: e.target.value }))}
+                      disabled={searchDisabled}
                       className="pl-10 sm:pl-12 h-12 sm:h-14 text-base sm:text-lg border-2 border-slate-200/50 dark:border-slate-700/50 focus:border-purple-500 dark:focus:border-purple-400 bg-white/80 dark:bg-slate-900/50 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 focus:shadow-lg focus:shadow-purple-500/20 dark:focus:shadow-purple-400/20"
                     />
                   </div>
@@ -810,7 +893,7 @@ export default function JobFinderApp() {
 
                   <Button
                     onClick={() => handleSearch()}
-                    disabled={loading}
+                    disabled={loading || searchDisabled}
                     size="lg"
                     className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/60 transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 w-full sm:w-auto"
                   >
@@ -884,6 +967,7 @@ export default function JobFinderApp() {
                           <Checkbox
                             id={type}
                             checked={filters.jobTypes.includes(type)}
+                            disabled={searchDisabled}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setFilters((prev) => ({ ...prev, jobTypes: [...prev.jobTypes, type] }))
@@ -910,11 +994,12 @@ export default function JobFinderApp() {
                       <RadioGroup
                         value={filters.locationMode}
                         onValueChange={(value) => setFilters((prev) => ({ ...prev, locationMode: value }))}
+                        disabled={searchDisabled}
                         className="space-y-2.5 sm:space-y-2"
                       >
                         {["On-site Only", "Remote Only", "Include Remote"].map((mode) => (
                           <div key={mode} className="flex items-center space-x-2.5 sm:space-x-2 p-2 sm:p-0 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <RadioGroupItem value={mode} id={mode} className="h-5 w-5" />
+                            <RadioGroupItem value={mode} id={mode} className="h-5 w-5" disabled={searchDisabled} />
                             <Label htmlFor={mode} className="text-xs sm:text-sm cursor-pointer flex-1">
                               {mode}
                             </Label>
@@ -932,6 +1017,7 @@ export default function JobFinderApp() {
                         onValueChange={(value) =>
                           setFilters((prev) => ({ ...prev, maxResults: Number.parseInt(value) }))
                         }
+                        disabled={searchDisabled}
                       >
                         <SelectTrigger className="h-11 sm:h-10">
                           <SelectValue />
@@ -952,6 +1038,7 @@ export default function JobFinderApp() {
                       <Select
                         value={filters.sortBy}
                         onValueChange={(value) => setFilters((prev) => ({ ...prev, sortBy: value }))}
+                        disabled={searchDisabled}
                       >
                         <SelectTrigger className="h-11 sm:h-10">
                           <SelectValue />
@@ -971,7 +1058,7 @@ export default function JobFinderApp() {
         </div>
 
         {/* Results Section */}
-        {searchPerformed && (
+        {searchPerformed ? (
           <>
             {/* Results Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4 p-4 sm:p-6 bg-gradient-to-r from-white/60 via-blue-50/40 to-purple-50/40 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/40 backdrop-blur-lg rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-lg">
@@ -1040,7 +1127,7 @@ export default function JobFinderApp() {
             </div>
 
             {/* Analytics Cards */}
-              {jobs.length > 0 && (
+              {baseJobs.length > 0 && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
                   {/* Total Jobs */}
                   <Card
@@ -1063,7 +1150,7 @@ export default function JobFinderApp() {
                         <div>
                           <p className="text-emerald-100 text-xs sm:text-sm font-medium">Total Jobs</p>
                           <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {jobs.length}
+                            {baseJobs.length}
                           </p>
                         </div>
                         <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
@@ -1092,7 +1179,7 @@ export default function JobFinderApp() {
                         <div>
                           <p className="text-blue-100 text-xs sm:text-sm font-medium">Companies</p>
                           <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {new Set(jobs.map((job) => job.Company)).size}
+                            {new Set(baseJobs.map((job) => job.Company)).size}
                           </p>
                         </div>
                         <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
@@ -1121,7 +1208,7 @@ export default function JobFinderApp() {
                         <div>
                           <p className="text-purple-100 text-xs sm:text-sm font-medium">Remote Jobs</p>
                           <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {jobs.filter((job) => isRemoteJob(job)).length}
+                            {baseJobs.filter((job) => isRemoteJob(job)).length}
                           </p>
                         </div>
                         <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
@@ -1150,7 +1237,7 @@ export default function JobFinderApp() {
                         <div>
                           <p className="text-orange-100 text-xs sm:text-sm font-medium">Locations</p>
                           <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {new Set(jobs.map((job) => job.Location)).size}
+                            {new Set(baseJobs.map((job) => job.Location)).size}
                           </p>
                         </div>
                         <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
@@ -1161,7 +1248,32 @@ export default function JobFinderApp() {
               )}
 
             {/* Job Results */}
-              {searchError ? (
+              {isSearching && (
+                <Card className="relative border-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10 animate-pulse"></div>
+                  <CardContent className="text-center py-16 sm:py-20 relative z-10">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/40 dark:to-purple-900/40 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                      Searching for jobs...
+                    </h3>
+                    <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                      Hang tight while we fetch the latest roles.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {showingCached && !isSearching && (
+                <div className="mb-4 text-sm text-amber-700 dark:text-amber-200 flex items-center gap-2">
+                  <Badge variant="outline" className="border-amber-400 text-amber-800 dark:text-amber-100">
+                    Cached
+                  </Badge>
+                  Showing last cached results (may be stale).
+                </div>
+              )}
+              {!isSearching && searchError && !showingCached ? (
                 <Card className="relative border-0 bg-gradient-to-br from-rose-50 via-amber-50 to-white dark:from-rose-900/30 dark:via-amber-900/20 dark:to-slate-900 backdrop-blur-xl shadow-2xl overflow-hidden group">
                   <div className="absolute inset-0 bg-gradient-to-r from-rose-400/10 via-amber-300/10 to-orange-300/10 dark:from-rose-500/10 dark:via-amber-500/10 dark:to-orange-500/10"></div>
                   <CardContent className="text-center py-16 sm:py-20 relative z-10">
@@ -1174,6 +1286,13 @@ export default function JobFinderApp() {
                     <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
                       {friendlyErrorMessage}
                     </p>
+                    {monthlyQuota && lastCachedJobs.length > 0 && (
+                      <div className="mt-6 flex justify-center">
+                        <Button variant="outline" onClick={() => setShowCachedResults(true)}>
+                          Show last cached results
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ) : filteredJobs.length > 0 ? (
@@ -1211,7 +1330,7 @@ export default function JobFinderApp() {
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : !isSearching ? (
                 <Card className="relative border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
                   <CardContent className="text-center py-20 relative z-10">
@@ -1226,8 +1345,23 @@ export default function JobFinderApp() {
                     </p>
                   </CardContent>
                 </Card>
-              )}
+              ) : null}
           </>
+        ) : (
+          <Card className="relative border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
+            <CardContent className="text-center py-20 relative z-10">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Search className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-800 dark:from-white dark:to-blue-200 bg-clip-text text-transparent mb-4">
+                Search to see jobs
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 text-lg max-w-md mx-auto">
+                Enter a role and hit Search or pick a quick-search to get tailored results.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </main>
 
