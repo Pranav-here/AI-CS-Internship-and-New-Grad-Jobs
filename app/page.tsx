@@ -479,7 +479,23 @@ export default function JobFinderApp() {
                   </Badge>
                 )}
               </Button>
-              <ThemeToggle />
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <ThemeToggle />
+                <div className="hidden md:flex items-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  <span className="mx-1 text-slate-300 dark:text-slate-600" aria-hidden="true">
+                    •
+                  </span>
+                  <a
+                    href="https://pranavkuchibhotla.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Visit Pranav's portfolio"
+                    className="hover:text-slate-700 dark:hover:text-slate-200 hover:underline transition-colors"
+                  >
+                    Built by Pranav
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
