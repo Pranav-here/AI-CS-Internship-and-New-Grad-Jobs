@@ -16,9 +16,21 @@ export default function CareerBuilderPage() {
         <div className="mx-auto max-w-6xl px-4 py-6 sm:py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="mb-2 sm:mb-3 flex items-center gap-2 text-xs sm:text-sm text-slate-500">
+              <div className="mb-2 sm:mb-3 flex items-center gap-2 text-xs sm:text-sm text-slate-500 w-full">
                 <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse text-indigo-500" />
                 <span className="animate-in fade-in delay-150 duration-500">Powered by Anthropic + OpenAI</span>
+                <div className="hidden sm:inline-flex items-center ml-auto text-xs sm:text-sm text-slate-500 whitespace-nowrap">
+                  <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+                  <Link
+                    href="https://pranavkuchibhotla.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Visit Pranav's portfolio"
+                    className="hover:text-slate-700 dark:hover:text-slate-200 hover:underline transition-colors"
+                  >
+                    Built by Pranav
+                  </Link>
+                </div>
               </div>
               <h1 className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-transparent dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">
                 Career Builder
