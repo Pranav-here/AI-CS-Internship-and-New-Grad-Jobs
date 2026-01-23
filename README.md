@@ -84,6 +84,20 @@ TechCareers is an AI-powered job search and application workspace built for earl
 - Career changers transitioning into tech from adjacent fields
 - Teams tailoring applications at scale and optimizing for ATS systems
 
+## Related Tools
+
+**After you apply, track your applications automatically.**
+
+Check out [**job-email-tracker**](https://github.com/Pranav-here/job-email-tracker) - an AI-powered system that monitors your Gmail inbox for job-related emails and automatically syncs application data to Airtable. Never lose track of where you've applied, interview invitations, or offer letters.
+
+- AI-powered email parsing with Claude
+- Automatic status tracking (Applied → Interviewing → Offer → Rejected)
+- Smart duplicate detection
+- Airtable integration for centralized tracking
+- Serverless deployment on Vercel
+
+Perfect companion tool to TechCareers for end-to-end job search management.
+
 ## License
 
 MIT License - This is open-source software free to use, modify, and distribute.
