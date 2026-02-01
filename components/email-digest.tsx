@@ -83,6 +83,27 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
         title: "Email Sent",
         description: `Sent ${Math.min(jobs.length, 10)} jobs to ${email}.`,
       })
+
+      // Show helpful hint about automated tracking
+      setTimeout(() => {
+        toast({
+          title: "💡 Pro Tip",
+          description: (
+            <div className="space-y-2">
+              <p>Track your applications automatically with job-email-tracker</p>
+              <a
+                href="https://github.com/Pranav-here/job-email-tracker"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600 underline text-sm"
+              >
+                Learn more →
+              </a>
+            </div>
+          ),
+        })
+      }, 2000)
+
       setEnableDigest(false)
       setEmail("")
     } catch {
@@ -170,7 +191,7 @@ export function EmailDigest({ jobs, searchFilters }: EmailDigestProps) {
             </Button>
 
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Well email the top {Math.min(jobs.length || 10, 10)} matching roles.
+              We'll email the top {Math.min(jobs.length || 10, 10)} matching roles.
             </p>
           </div>
         )}
