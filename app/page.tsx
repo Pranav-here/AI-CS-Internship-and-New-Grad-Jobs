@@ -1143,11 +1143,11 @@ export default function JobFinderApp() {
             </div>
 
             {/* Analytics Cards */}
-              {baseJobs.length > 0 && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-                  {/* Total Jobs */}
-                  <Card
-                    className="
+            {baseJobs.length > 0 && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                {/* Total Jobs */}
+                <Card
+                  className="
                       group border-0
                       bg-gradient-to-r from-emerald-500 to-teal-600
                       text-white
@@ -1159,24 +1159,24 @@ export default function JobFinderApp() {
                       cursor-pointer
                       relative overflow-hidden
                     "
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <CardContent className="p-3 sm:p-6 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-emerald-100 text-xs sm:text-sm font-medium">Total Jobs</p>
-                          <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {baseJobs.length}
-                          </p>
-                        </div>
-                        <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <CardContent className="p-3 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-emerald-100 text-xs sm:text-sm font-medium">Total Jobs</p>
+                        <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+                          {baseJobs.length}
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Companies */}
-                  <Card
-                    className="
+                {/* Companies */}
+                <Card
+                  className="
                       group border-0
                       bg-gradient-to-r from-blue-500 to-indigo-600
                       text-white
@@ -1188,24 +1188,24 @@ export default function JobFinderApp() {
                       cursor-pointer
                       relative overflow-hidden
                     "
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <CardContent className="p-3 sm:p-6 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-blue-100 text-xs sm:text-sm font-medium">Companies</p>
-                          <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {new Set(baseJobs.map((job) => job.Company)).size}
-                          </p>
-                        </div>
-                        <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <CardContent className="p-3 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-blue-100 text-xs sm:text-sm font-medium">Companies</p>
+                        <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+                          {new Set(baseJobs.map((job) => job.Company)).size}
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Remote Jobs */}
-                  <Card
-                    className="
+                {/* Remote Jobs */}
+                <Card
+                  className="
                       group border-0
                       bg-gradient-to-r from-purple-500 to-pink-600
                       text-white
@@ -1217,24 +1217,24 @@ export default function JobFinderApp() {
                       cursor-pointer
                       relative overflow-hidden
                     "
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <CardContent className="p-3 sm:p-6 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-purple-100 text-xs sm:text-sm font-medium">Remote Jobs</p>
-                          <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {baseJobs.filter((job) => isRemoteJob(job)).length}
-                          </p>
-                        </div>
-                        <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <CardContent className="p-3 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-purple-100 text-xs sm:text-sm font-medium">Remote Jobs</p>
+                        <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+                          {baseJobs.filter((job) => isRemoteJob(job)).length}
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  {/* Locations */}
-                  <Card
-                    className="
+                {/* Locations */}
+                <Card
+                  className="
                       group border-0
                       bg-gradient-to-r from-orange-500 to-red-600
                       text-white
@@ -1246,122 +1246,122 @@ export default function JobFinderApp() {
                       cursor-pointer
                       relative overflow-hidden
                     "
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <CardContent className="p-3 sm:p-6 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-orange-100 text-xs sm:text-sm font-medium">Locations</p>
-                          <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
-                            {new Set(baseJobs.map((job) => job.Location)).size}
-                          </p>
-                        </div>
-                        <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                  <CardContent className="p-3 sm:p-6 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-orange-100 text-xs sm:text-sm font-medium">Locations</p>
+                        <p className="text-xl sm:text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+                          {new Set(baseJobs.map((job) => job.Location)).size}
+                        </p>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+                      <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200 group-hover:scale-125 group-hover:-rotate-12 transition-all duration-300" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Job Results */}
-              {isSearching && (
-                <Card className="relative border-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10 animate-pulse"></div>
-                  <CardContent className="text-center py-16 sm:py-20 relative z-10">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/40 dark:to-purple-900/40 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent" />
-                    </div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                      Searching for jobs...
-                    </h3>
-                    <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
-                      Hang tight while we fetch the latest roles.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+            {isSearching && (
+              <Card className="relative border-0 bg-gradient-to-br from-white via-blue-50 to-purple-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10 animate-pulse"></div>
+                <CardContent className="text-center py-16 sm:py-20 relative z-10">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/40 dark:to-purple-900/40 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent" />
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                    Searching for jobs...
+                  </h3>
+                  <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                    Hang tight while we fetch the latest roles.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
-              {showingCached && !isSearching && (
-                <div className="mb-4 text-sm text-amber-700 dark:text-amber-200 flex items-center gap-2">
-                  <Badge variant="outline" className="border-amber-400 text-amber-800 dark:text-amber-100">
-                    Cached
-                  </Badge>
-                  Showing last cached results (may be stale).
-                </div>
-              )}
-              {!isSearching && searchError && !showingCached ? (
-                <Card className="relative border-0 bg-gradient-to-br from-rose-50 via-amber-50 to-white dark:from-rose-900/30 dark:via-amber-900/20 dark:to-slate-900 backdrop-blur-xl shadow-2xl overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-rose-400/10 via-amber-300/10 to-orange-300/10 dark:from-rose-500/10 dark:via-amber-500/10 dark:to-orange-500/10"></div>
-                  <CardContent className="text-center py-16 sm:py-20 relative z-10">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-rose-100 to-amber-100 dark:from-rose-900/40 dark:to-amber-900/40 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <Sparkles className="w-8 h-8 text-rose-600 dark:text-rose-300" />
+            {showingCached && !isSearching && (
+              <div className="mb-4 text-sm text-amber-700 dark:text-amber-200 flex items-center gap-2">
+                <Badge variant="outline" className="border-amber-400 text-amber-800 dark:text-amber-100">
+                  Cached
+                </Badge>
+                Showing last cached results (may be stale).
+              </div>
+            )}
+            {!isSearching && searchError && !showingCached ? (
+              <Card className="relative border-0 bg-gradient-to-br from-rose-50 via-amber-50 to-white dark:from-rose-900/30 dark:via-amber-900/20 dark:to-slate-900 backdrop-blur-xl shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-rose-400/10 via-amber-300/10 to-orange-300/10 dark:from-rose-500/10 dark:via-amber-500/10 dark:to-orange-500/10"></div>
+                <CardContent className="text-center py-16 sm:py-20 relative z-10">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-rose-100 to-amber-100 dark:from-rose-900/40 dark:to-amber-900/40 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Sparkles className="w-8 h-8 text-rose-600 dark:text-rose-300" />
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                    Search temporarily paused
+                  </h3>
+                  <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                    {friendlyErrorMessage}
+                  </p>
+                  {monthlyQuota && lastCachedJobs.length > 0 && (
+                    <div className="mt-6 flex justify-center">
+                      <Button variant="outline" onClick={() => setShowCachedResults(true)}>
+                        Show last cached results
+                      </Button>
                     </div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                      Search temporarily paused
-                    </h3>
-                    <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
-                      {friendlyErrorMessage}
-                    </p>
-                    {monthlyQuota && lastCachedJobs.length > 0 && (
-                      <div className="mt-6 flex justify-center">
-                        <Button variant="outline" onClick={() => setShowCachedResults(true)}>
-                          Show last cached results
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ) : filteredJobs.length > 0 ? (
-                <div className="space-y-6 sm:space-y-8">
-                  {viewMode === "grid" ? (
-                    <div
-                      className="
+                  )}
+                </CardContent>
+              </Card>
+            ) : filteredJobs.length > 0 ? (
+              <div className="space-y-6 sm:space-y-8">
+                {viewMode === "grid" ? (
+                  <div
+                    className="
                         grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6
                         motion-safe:animate-fade-in
                       "
-                    >
-                      {filteredJobs.map((job, index) => (
-                        <JobCard
-                          key={index}
-                          job={job}
-                          onSave={() => handleSaveJob(job)}
-                          isSaved={isJobSaved(job)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div
-                      className="
+                  >
+                    {filteredJobs.map((job, index) => (
+                      <JobCard
+                        key={index}
+                        job={job}
+                        onSave={() => handleSaveJob(job)}
+                        isSaved={isJobSaved(job)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    className="
                         space-y-4 motion-safe:animate-fade-in
                       "
-                    >
-                      {filteredJobs.map((job, index) => (
-                        <JobListItem
-                          key={index}
-                          job={job}
-                          onSave={() => handleSaveJob(job)}
-                          isSaved={isJobSaved(job)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : !isSearching ? (
-                <Card className="relative border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
-                  <CardContent className="text-center py-20 relative z-10">
-                    <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                      <Search className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h3 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-800 dark:from-white dark:to-blue-200 bg-clip-text text-transparent mb-4">
-                      No jobs found
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400 text-lg max-w-md mx-auto">
-                      Try adjusting your search criteria or explore different keywords
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : null}
+                  >
+                    {filteredJobs.map((job, index) => (
+                      <JobListItem
+                        key={index}
+                        job={job}
+                        onSave={() => handleSaveJob(job)}
+                        isSaved={isJobSaved(job)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : !isSearching ? (
+              <Card className="relative border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5"></div>
+                <CardContent className="text-center py-20 relative z-10">
+                  <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <Search className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-800 dark:from-white dark:to-blue-200 bg-clip-text text-transparent mb-4">
+                    No jobs found
+                  </h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg max-w-md mx-auto">
+                    Try adjusting your search criteria or explore different keywords
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
           </>
         ) : (
           <Card className="relative border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-800 dark:via-slate-800/90 dark:to-slate-800/80 backdrop-blur-xl shadow-2xl overflow-hidden group">
@@ -1475,9 +1475,71 @@ export default function JobFinderApp() {
           size="icon"
           aria-label="Scroll to search"
         >
-          <ChevronUp className="h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-125 transition-transform duration-300" />
+          <ChevronUp className="h-5 w-5 sm:h-6 sm:h-6 group-hover:scale-125 transition-transform duration-300" />
         </Button>
       )}
+
+      {/* Footer */}
+      <footer className="mt-16 sm:mt-20 border-t border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-900/80">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12">
+          {/* Related Tools Section */}
+          <Card className="border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardContent className="p-6 sm:p-8 relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                      <Send className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                        Track Your Applications Automatically
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        Never lose track of your job applications
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+                    After applying to jobs, use <strong className="text-blue-600 dark:text-blue-400">job-email-tracker</strong> to automatically monitor your Gmail for job-related emails.
+                    It uses AI to extract application details and syncs everything to Airtable, tracking your status from Applied → Interviewing → Offer.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                      AI-Powered Parsing
+                    </Badge>
+                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0">
+                      Auto Status Updates
+                    </Badge>
+                    <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border-0">
+                      Airtable Integration
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 relative overflow-hidden group/btn"
+                  >
+                    <a
+                      href="https://github.com/Pranav-here/job-email-tracker"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
+                      <ExternalLink className="w-4 h-4 mr-2 relative z-10 group-hover/btn:scale-110 transition-transform duration-300" />
+                      <span className="relative z-10 font-semibold">View on GitHub</span>
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </footer>
+
     </div>
   )
 }
@@ -1487,8 +1549,8 @@ function JobCard({ job, onSave, isSaved }: { job: Job; onSave: () => void; isSav
   const isRemote = job["Remote Job"] === "remote" || job["Remote Job"] === "hybrid" || job.Location?.toLowerCase().includes("remote")
   const tags = job.Tags
     ? job.Tags.split(",")
-        .map((tag) => tag.trim())
-        .slice(0, 3)
+      .map((tag) => tag.trim())
+      .slice(0, 3)
     : []
 
   const getDaysAgo = (dateStr: string) => {
@@ -1604,8 +1666,8 @@ function JobListItem({ job, onSave, isSaved }: { job: Job; onSave: () => void; i
   const isRemote = job["Remote Job"] === "remote" || job["Remote Job"] === "hybrid" || job.Location?.toLowerCase().includes("remote")
   const tags = job.Tags
     ? job.Tags.split(",")
-        .map((tag) => tag.trim())
-        .slice(0, 2)
+      .map((tag) => tag.trim())
+      .slice(0, 2)
     : []
 
   return (
