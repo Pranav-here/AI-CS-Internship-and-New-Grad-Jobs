@@ -6,7 +6,7 @@ import { createResumeDocx, EXPANDED_RESUME_MAX_LENGTH, JOB_DESCRIPTION_MAX_LENGT
 
 export const runtime = "nodejs"
 
-const ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022"
+const ANTHROPIC_MODEL = "claude-sonnet-4-6"
 const OPENAI_MODEL = "gpt-4o-mini"
 const OPENAI_MODEL_CANDIDATES: string[] = Array.from(
   new Set(
@@ -24,9 +24,7 @@ const ANTHROPIC_MODEL_CANDIDATES: string[] = Array.from(
     [
       process.env.ANTHROPIC_MODEL,
       ANTHROPIC_MODEL,
-      "claude-3-5-sonnet-latest",
-      "claude-3-5-sonnet-20240620",
-      "claude-3-5-haiku-latest",
+      "claude-haiku-4-5-20251001",
     ].filter((model): model is string => Boolean(model))
   )
 )
