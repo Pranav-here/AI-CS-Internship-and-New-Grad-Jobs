@@ -4,15 +4,13 @@ import { findSkillResources } from "@/lib/skills-database"
 
 export const runtime = "nodejs"
 
-const ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022"
+const ANTHROPIC_MODEL = "claude-sonnet-4-6"
 const ANTHROPIC_MODEL_CANDIDATES: string[] = Array.from(
   new Set(
     [
       process.env.ANTHROPIC_MODEL,
       ANTHROPIC_MODEL,
-      "claude-3-5-sonnet-latest",
-      "claude-3-5-sonnet-20240620",
-      "claude-3-5-haiku-latest",
+      "claude-haiku-4-5-20251001",
     ].filter((model): model is string => Boolean(model))
   )
 )
